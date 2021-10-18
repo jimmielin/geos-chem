@@ -5,7 +5,7 @@
 #MEX off
 #STOICMAT off
 #AUTOREDUCE on
-#FUNCTION aggregate
+#FUNCTION split
 
 #INCLUDE fullchem.eqn
 

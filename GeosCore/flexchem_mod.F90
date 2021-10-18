@@ -805,13 +805,23 @@ CONTAINS
        !
        ! Archive KPP reaction rates [s-1]
        ! See gckpp_Monitor.F90 for a list of chemical reactions
+       !
+       ! FIXME hplin 10/18/21: requires function to be defined as aggregate.
+       ! however for autoreduce test, we need fun_split for individual P/L
+       ! Patching this away for now, not calling Fun()
+       ! 
        !--------------------------------------------------------------------
+       ! IF ( State_Diag%Archive_RxnRate ) THEN
+       !    CALL Fun( VAR, FIX, RCONST, Vloc, Aout=Aout )
+       !    DO S = 1, State_Diag%Map_RxnRate%nSlots
+       !       N = State_Diag%Map_RxnRate%slot2Id(S)
+       !       State_Diag%RxnRate(I,J,L,S) = Aout(N)
+       !    ENDDO
+       ! ENDIF
+
+       ! for split mode code:
        IF ( State_Diag%Archive_RxnRate ) THEN
-          CALL Fun( VAR, FIX, RCONST, Vloc, Aout=Aout )
-          DO S = 1, State_Diag%Map_RxnRate%nSlots
-             N = State_Diag%Map_RxnRate%slot2Id(S)
-             State_Diag%RxnRate(I,J,L,S) = Aout(N)
-          ENDDO
+            ! CALL Fun_SPLIT( VAR, FIX, RCONST, )
        ENDIF
 
        !=====================================================================
