@@ -22,7 +22,7 @@
 
 ### Options -------------------------------------------
 
-FUNCTION - SPLIT
+FUNCTION - AGGREGATE
 JACOBIAN - SPARSE W/ ACCOUNT FOR LU DECOMPOSITION FILL-IN
 DOUBLE   - ON
 REORDER  - ON
@@ -143,7 +143,6 @@ Fixed species
 
 ### Subroutines ---------------------------------------
 
-SUBROUTINE Fun_SPLIT ( V, F, RCT, P_VAR, D_VAR )
 SUBROUTINE Flux ( RR, P_VAR, D_VAR )
 SUBROUTINE Jac_SP ( V, F, RCT, JVS )
 SUBROUTINE Jac_SP_Vec ( JVS, UV, JUV )
