@@ -819,11 +819,6 @@ CONTAINS
        !    ENDDO
        ! ENDIF
 
-       ! for split mode code:
-       IF ( State_Diag%Archive_RxnRate ) THEN
-            ! CALL Fun_SPLIT( VAR, FIX, RCONST, )
-       ENDIF
-
        !=====================================================================
        ! Set options for the KPP Integrator (M. J. Evans)
        !
@@ -838,6 +833,19 @@ CONTAINS
 
        ! Starting value for integration time step
        RCNTRL(3) = State_Chm%KPPHvalue(I,J,L)
+
+       !=====================================================================
+       ! Set options for auto-reduction of mechanism
+       !
+       ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
+       !=====================================================================
+       IF ( Input_Opt%USE_AUTOREDUCE ) THEN
+          ICNTRL(8) = 1
+       ELSE
+          ICNTRL(8) = 0
+       ENDIF
+
+       RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
 
        !=====================================================================
        ! Integrate the box forwards

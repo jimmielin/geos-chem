@@ -192,6 +192,8 @@ MODULE Input_Opt_Mod
      LOGICAL                     :: USE_ONLINE_O3
      LOGICAL                     :: USE_O3_FROM_MET
      LOGICAL                     :: USE_TOMS_O3
+     LOGICAL                     :: USE_AUTOREDUCE
+     REAL(fp)                    :: AUTOREDUCE_THRESHOLD
 #ifdef MODEL_GEOS
      LOGICAL                     :: LGMIOZ
 #endif
@@ -708,6 +710,8 @@ CONTAINS
     Input_Opt%USE_ONLINE_O3          = .FALSE.
     Input_Opt%USE_O3_FROM_MET        = .FALSE.
     Input_Opt%USE_TOMS_O3            = .FALSE.
+    Input_Opt%USE_AUTOREDUCE         = .FALSE.
+    Input_Opt%AUTOREDUCE_THRESHOLD   = 1e+2_fp
 
     !----------------------------------------
     ! PHOTOLYSIS MENU fields

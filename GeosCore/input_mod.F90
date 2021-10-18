@@ -2285,6 +2285,22 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%GAMMA_HO2
 
+    ! Use autoreduce?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'USE_AUTOREDUCE', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%USE_AUTOREDUCE
+
+    ! Auto-reduce rate threshold
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_THRESHOLD', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_THRESHOLD
+
     ! Separator line
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'separator 2', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2372,6 +2388,11 @@ CONTAINS
                             Input_Opt%USE_TOMS_O3
        WRITE( 6, 110     ) 'GAMMA HO2                   : ', &
                             Input_Opt%GAMMA_HO2
+       WRITE( 6, 110     ) 'Use auto-reduce solver?     : ', &
+                            Input_Opt%USE_AUTOREDUCE
+       WRITE( 6, 100     ) 'Auto-reduce threshold       : ', &
+                            Input_Opt%AUTOREDUCE_THRESHOLD
+
        IF ( Input_Opt%USE_ONLINE_O3 ) THEN
           WRITE( 6, '(a)' ) ''
           WRITE( 6, '(a)' ) 'NOTE ABOUT OVERHEAD O3 FOR FAST-JX:'
