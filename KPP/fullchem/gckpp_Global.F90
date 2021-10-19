@@ -86,6 +86,7 @@ MODULE gckpp_Global
   INTEGER :: rNVAR
 ! cNONZERO -
   INTEGER :: cNONZERO
+!$OMP THREADPRIVATE(  DO_JVS, DO_SLV, DO_FUN, cLU_IROW, cLU_ICOL, cLU_CROW, cLU_DIAG, JVS_MAP, SPC_MAP, rNVAR, cNONZERO )
 
 ! INLINED global variable declarations
 
