@@ -791,7 +791,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
    if (.not. reduced) then
       Prd0 = Prod ! Save the initial Prod vector for 1st order approx
       Los0 = Loss ! Save the initial Loss vector for 1st order approx
-      CALL Reduce( threshold, Prd0, Los0 )
+      CALL Reduce( threshold, Prd0, Los0*Y )
       reduced = .true.
    endif
 !~~~>  Compute the function derivative with respect to T
