@@ -2388,9 +2388,9 @@ CONTAINS
                             Input_Opt%USE_TOMS_O3
        WRITE( 6, 110     ) 'GAMMA HO2                   : ', &
                             Input_Opt%GAMMA_HO2
-       WRITE( 6, 110     ) 'Use auto-reduce solver?     : ', &
+       WRITE( 6, 100     ) 'Use auto-reduce solver?     : ', &
                             Input_Opt%USE_AUTOREDUCE
-       WRITE( 6, 100     ) 'Auto-reduce threshold       : ', &
+       WRITE( 6, 110     ) 'Auto-reduce threshold       : ', &
                             Input_Opt%AUTOREDUCE_THRESHOLD
 
        IF ( Input_Opt%USE_ONLINE_O3 ) THEN
