@@ -584,6 +584,10 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: KppSmDecomps(:,:,:)
      LOGICAL                     :: Archive_KppSmDecomps
 
+     !%%%%% KPP auto-reduce solver diagnostics %%%%%
+     REAL(f4),           POINTER :: KppAutoReducerNVAR(:,:,:)
+     LOGICAL                     :: Archive_KppAutoReducerNVAR
+
      LOGICAL                     :: Archive_KppDiags
 
      !%%%%% Chemistry metrics (e.g. mean OH, MCF lifetime, CH4 lifetime) %%%%%
@@ -1595,6 +1599,9 @@ CONTAINS
 
     State_Diag%KppSmDecomps                        => NULL()
     State_Diag%Archive_KppSmDecomps                = .FALSE.
+
+    State_Diag%KppAutoReducerNVAR                  => NULL()
+    State_Diag%Archive_KppAutoReducerNVAR          = .FALSE.
 
     State_Diag%Archive_KppDiags                    = .FALSE.
 
@@ -4685,6 +4692,29 @@ CONTAINS
           RETURN
        ENDIF
 
+       !-------------------------------------------------------------------
+       ! Number of species in reduced mechanism (NVAR - NRMV)
+       !-------------------------------------------------------------------
+       diagID = 'KppAutoReducerNVAR'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppAutoReducerNVAR,                  &
+            archiveData    = State_Diag%Archive_KppAutoReducerNVAR,         &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+
 #ifdef MODEL_GEOS
        !--------------------------------------------------------------------
        ! CH4 pseudo-flux
@@ -4811,6 +4841,8 @@ CONTAINS
                 diagID = 'KppSubsts'
              CASE( 32 )
                 diagID = 'KppSmDecomps'
+             CASE( 33 )
+                diagID = 'KppAutoReducerNVAR'
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -8586,14 +8618,15 @@ CONTAINS
                                    State_Diag%Archive_DryDepRaALT1     .and. &
                                    State_Diag%Archive_DryDepVelForALT1      )
 
-    State_Diag%Archive_KppDiags = ( State_Diag%Archive_KppIntCounts    .or.  &
-                                    State_Diag%Archive_KppJacCounts    .or.  &
-                                    State_Diag%Archive_KppTotSteps     .or.  &
-                                    State_Diag%Archive_KppAccSteps     .or.  &
-                                    State_Diag%Archive_KppRejSteps     .or.  &
-                                    State_Diag%Archive_KppLuDecomps    .or.  &
-                                    State_Diag%Archive_KppSubsts       .or.  &
-                                    State_Diag%Archive_KppSmDecomps    .or.  &
+    State_Diag%Archive_KppDiags = ( State_Diag%Archive_KppIntCounts       .or. &
+                                    State_Diag%Archive_KppJacCounts       .or. &
+                                    State_Diag%Archive_KppTotSteps        .or. &
+                                    State_Diag%Archive_KppAccSteps        .or. &
+                                    State_Diag%Archive_KppRejSteps        .or. &
+                                    State_Diag%Archive_KppLuDecomps       .or. &
+                                    State_Diag%Archive_KppSubsts          .or. &
+                                    State_Diag%Archive_KppSmDecomps       .or. &
+                                    State_Diag%Archive_KppAutoReducerNVAR .or. &
                                     State_Diag%Archive_KppDiags             )
 
     State_Diag%Archive_RadOptics  = ( State_Diag%Archive_RadAODWL1     .or. &
@@ -9783,6 +9816,11 @@ CONTAINS
 
     CALL Finalize( diagId   = 'KppSmDecomps',                                &
                    Ptr2Data = State_Diag%KppSmDecomps,                       &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppAutoReducerNVAR',                          &
+                   Ptr2Data = State_Diag%KppAutoReducerNVAR,                 &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
@@ -11219,6 +11257,11 @@ CONTAINS
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSMDECOMPS' ) THEN
        IF ( isDesc    ) Desc  = 'Number of KPP singular matrix decompositions'
+       IF ( isUnits   ) Units = 'count'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPAUTOREDUCERNVAR' ) THEN
+       IF ( isDesc    ) Desc  = 'Number of species in auto-reduced mechanism'
        IF ( isUnits   ) Units = 'count'
        IF ( isRank    ) Rank  =  3
 

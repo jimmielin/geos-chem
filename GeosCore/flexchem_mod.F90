@@ -259,6 +259,7 @@ CONTAINS
        IF (State_Diag%Archive_KppLuDecomps) State_Diag%KppLuDecomps   = 0.0_f4
        IF (State_Diag%Archive_KppSubsts   ) State_Diag%KppSubsts      = 0.0_f4
        IF (State_Diag%Archive_KppSmDecomps) State_Diag%KppSmDecomps   = 0.0_f4
+       IF (State_Diag%Archive_KppAutoReducerNVAR) State_Diag%KppAutoReducerNVAR   = 0.0_f4
     ENDIF
 
     ! Keep track of the boxes where it is local noon in the JNoonFrac
@@ -921,6 +922,11 @@ CONTAINS
           ! # of singular-matrix decompositions
           IF ( State_Diag%Archive_KppSmDecomps ) THEN
              State_Diag%KppSmDecomps(I,J,L) = ISTATUS(8)
+          ENDIF
+
+          ! # of species in auto-reduced mechanism
+          IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppAutoReducerNVAR ) THEN
+             State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
           ENDIF
        ENDIF
 
