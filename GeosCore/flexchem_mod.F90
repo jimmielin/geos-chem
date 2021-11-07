@@ -508,6 +508,18 @@ CONTAINS
     ! 0 - adjoint, 1 - no adjoint
     ICNTRL(7) = 1
 
+    !%%%%% AUTO-REDUCE OPTIONS %%%%%
+    !=====================================================================
+    ! Set options for auto-reduction of mechanism
+    !
+    ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
+    !=====================================================================
+    IF ( Input_Opt%USE_AUTOREDUCE .and. .not. FIRSTCHEM ) THEN
+       ICNTRL(8) = 1
+    ELSE
+       ICNTRL(8) = 0
+    ENDIF
+
     !=======================================================================
     ! %%%%% SOLVE CHEMISTRY -- This is the main KPP solver loop %%%%%
     !=======================================================================
@@ -835,17 +847,6 @@ CONTAINS
        ! Starting value for integration time step
        RCNTRL(3) = State_Chm%KPPHvalue(I,J,L)
 
-       !=====================================================================
-       ! Set options for auto-reduction of mechanism
-       !
-       ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
-       !=====================================================================
-       IF ( Input_Opt%USE_AUTOREDUCE ) THEN
-          ICNTRL(8) = 1
-       ELSE
-          ICNTRL(8) = 0
-       ENDIF
-
        RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
 
        !=====================================================================
@@ -942,7 +943,8 @@ CONTAINS
 
           ! Retry the integration without auto-reduce solver
           IF ( Input_Opt%USE_AUTOREDUCE ) THEN
-            ICNTRL(8)  = 0
+             ! ICNTRL(8)  = 0
+             RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
           ENDIF
 
           CALL Init_KPP( )

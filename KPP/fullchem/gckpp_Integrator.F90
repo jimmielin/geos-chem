@@ -405,7 +405,8 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
     IF (RCNTRL(8) > ZERO) THEN
        Redux_Threshold = RCNTRL(8)
     ELSEIF (RCNTRL(8) < ZERO) THEN
-       PRINT *, 'Auto-reduction Threshold < 0. Defaulting to ', Redux_Threshold
+       Autoreduce = .false.
+       PRINT *, 'Auto-reduction Threshold < 0.'
     ENDIF
 !~~~>  CALL Auto-reducing Rosenbrock method
     IF ( Autoreduce ) &
