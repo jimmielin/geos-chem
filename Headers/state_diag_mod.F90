@@ -588,6 +588,9 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: KppAutoReducerNVAR(:,:,:)
      LOGICAL                     :: Archive_KppAutoReducerNVAR
 
+     REAL(f4),           POINTER :: KppTime(:,:,:)
+     LOGICAL                     :: Archive_KppTime
+
      LOGICAL                     :: Archive_KppDiags
 
      !%%%%% Chemistry metrics (e.g. mean OH, MCF lifetime, CH4 lifetime) %%%%%
@@ -1602,6 +1605,9 @@ CONTAINS
 
     State_Diag%KppAutoReducerNVAR                  => NULL()
     State_Diag%Archive_KppAutoReducerNVAR          = .FALSE.
+
+    State_Diag%KppTime                             => NULL()
+    State_Diag%Archive_KppTime                     = .FALSE.
 
     State_Diag%Archive_KppDiags                    = .FALSE.
 
@@ -4704,7 +4710,29 @@ CONTAINS
             DiagList       = Diag_List,                                      &
             TaggedDiagList = TaggedDiag_List,                                &
             Ptr2Data       = State_Diag%KppAutoReducerNVAR,                  &
-            archiveData    = State_Diag%Archive_KppAutoReducerNVAR,         &
+            archiveData    = State_Diag%Archive_KppAutoReducerNVAR,          &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
+       ! CPU time spent in grid box for KPP
+       !-------------------------------------------------------------------
+       diagID = 'KppTime'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppTime,                             &
+            archiveData    = State_Diag%Archive_KppTime,                     &
             diagId         = diagId,                                         &
             RC             = RC                                             )
 
@@ -4843,6 +4871,8 @@ CONTAINS
                 diagID = 'KppSmDecomps'
              CASE( 33 )
                 diagID = 'KppAutoReducerNVAR'
+             CASE( 34 )
+                diagID = 'KppTime'
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -8627,6 +8657,7 @@ CONTAINS
                                     State_Diag%Archive_KppSubsts          .or. &
                                     State_Diag%Archive_KppSmDecomps       .or. &
                                     State_Diag%Archive_KppAutoReducerNVAR .or. &
+                                    State_Diag%Archive_KppTime            .or. &
                                     State_Diag%Archive_KppDiags             )
 
     State_Diag%Archive_RadOptics  = ( State_Diag%Archive_RadAODWL1     .or. &
@@ -9821,6 +9852,11 @@ CONTAINS
 
     CALL Finalize( diagId   = 'KppAutoReducerNVAR',                          &
                    Ptr2Data = State_Diag%KppAutoReducerNVAR,                 &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppTime',                                     &
+                   Ptr2Data = State_Diag%KppTime,                            &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
@@ -11263,6 +11299,11 @@ CONTAINS
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPAUTOREDUCERNVAR' ) THEN
        IF ( isDesc    ) Desc  = 'Number of species in auto-reduced mechanism'
        IF ( isUnits   ) Units = 'count'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPTIME' ) THEN
+       IF ( isDesc    ) Desc  = 'Time spent in grid box'
+       IF ( isUnits   ) Units = 's'
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'LOSSPOPPOCPOBYGASPHASE' ) THEN

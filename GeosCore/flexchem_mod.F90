@@ -205,6 +205,9 @@ CONTAINS
     REAL(fp)               :: OHreact
     REAL(dp)               :: Vloc(NVAR), Aout(NREACT)
 
+    ! Grid box integration time diagnostic
+    REAL(fp)               :: TimeStart, TimeEnd
+
     !=======================================================================
     ! Do_FlexChem begins here!
     !=======================================================================
@@ -548,7 +551,7 @@ CONTAINS
     ! Variables not listed here are held THREADPRIVATE in gckpp_Global.F90
     ! !$OMP COLLAPSE(3) vectorizes the loop and !$OMP DYNAMIC(24) sends
     ! 24 boxes at a time to each core... then when that core is finished,
-    ! it gets a nother chunk of 24 boxes.  This should lead to better
+    ! it gets another chunk of 24 boxes.  This should lead to better
     ! load balancing, and will spread the sunrise/sunset boxes across
     ! more cores.
     !-----------------------------------------------------------------------
@@ -559,6 +562,7 @@ CONTAINS
     !$OMP PRIVATE( SpcID,    KppID,    F,       P,         Vloc             )&
     !$OMP PRIVATE( Aout,     Thread,   RC,      S,         LCH4             )&
     !$OMP PRIVATE( OHreact,  PCO_TOT,  PCO_CH4, PCO_NMVOC                   )&
+    !$OMP PRIVATE( TimeStart,TimeEnd                                        )&
     !$OMP COLLAPSE( 3                                                       )&
     !$OMP SCHEDULE( DYNAMIC, 24                                             )
     DO L = 1, State_Grid%NZ
@@ -586,6 +590,11 @@ CONTAINS
        Thread    = OMP_GET_THREAD_NUM() + 1 ! OpenMP thread number
 #endif
 #endif
+
+       ! Start measuring KPP-related routine timing for this grid box
+       IF ( State_Diag%Archive_KppTime ) THEN
+          call cpu_time(TimeStart)
+       ENDIF
 
        !====================================================================
        ! Get photolysis rates (daytime only)
@@ -1048,6 +1057,13 @@ CONTAINS
 
        ! Save for next integration time step
        State_Chm%KPPHvalue(I,J,L) = RSTATE(Nhnew)
+
+       ! Save cpu time spent for bulk of KPP-related routines for History archival
+       ! (hplin, 11/8/21)
+       IF ( State_Diag%Archive_KppTime ) THEN
+          call cpu_time(TimeEnd)
+          State_Diag%KppTime(I,J,L) = TimeEnd - TimeStart
+       ENDIF
 
        !====================================================================
        ! Check we have no negative values and copy the concentrations
