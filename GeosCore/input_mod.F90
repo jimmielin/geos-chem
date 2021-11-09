@@ -2293,6 +2293,14 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%USE_AUTOREDUCE
 
+    ! Keep strat. spc. active?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_KEEPSTRAT_ACTIVE', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE
+
     ! Auto-reduce rate threshold
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_THRESHOLD', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2300,6 +2308,14 @@ CONTAINS
        RETURN
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_THRESHOLD
+
+    ! Prs. dep. threshold?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_PRS_THRESHOLD', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
 
     ! Separator line
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'separator 2', RC )
@@ -2392,6 +2408,10 @@ CONTAINS
                             Input_Opt%USE_AUTOREDUCE
        WRITE( 6, 110     ) 'Auto-reduce threshold       : ', &
                             Input_Opt%AUTOREDUCE_THRESHOLD
+       WRITE( 6, 100     ) 'Keep strat. spec. active?   : ', &
+                            Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE
+       WRITE( 6, 100     ) 'Use prs. dependent threshold? ', &
+                            Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
 
        IF ( Input_Opt%USE_ONLINE_O3 ) THEN
           WRITE( 6, '(a)' ) ''
