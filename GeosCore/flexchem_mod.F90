@@ -546,6 +546,39 @@ CONTAINS
     ENDIF
 
     !-----------------------------------------------------------------------
+    ! Keep species active functionality for auto-reduce
+    !-----------------------------------------------------------------------
+    IF ( FIRSTCHEM ) THEN
+       keepSpcActive(ind_CH2I2)    = .true.
+       keepSpcActive(ind_CH2ICl)   = .true.
+       keepSpcActive(ind_CH2IBr)   = .true.
+       keepSpcActive(ind_CH3I)     = .true.
+       keepSpcActive(ind_CH3CCl3)  = .true.
+       keepSpcActive(ind_CHBr3)    = .true.
+       keepSpcActive(ind_CH2Cl2)   = .true.
+       keepSpcActive(ind_CHCl3)    = .true.
+       keepSpcActive(ind_CH2Br2)   = .true.
+       keepSpcActive(ind_HCFC123)  = .true.
+       keepSpcActive(ind_HCFC141b) = .true.
+       keepSpcActive(ind_HCFC142b) = .true.
+       keepSpcActive(ind_HCFC22)   = .true.
+       keepSpcActive(ind_CH3Br)    = .true.
+       keepSpcActive(ind_CH3Cl)    = .true.
+       keepSpcActive(ind_H1301)    = .true.
+       keepSpcActive(ind_H2402)    = .true.
+       keepSpcActive(ind_CCl4)     = .true.
+       keepSpcActive(ind_CFC11)    = .true.
+       keepSpcActive(ind_CFC12)    = .true.
+       keepSpcActive(ind_CFC113)   = .true.
+       keepSpcActive(ind_CFC114)   = .true.
+       keepSpcActive(ind_CFC115)   = .true.
+       keepSpcActive(ind_H1211)    = .true.
+       keepSpcActive(ind_N2O)      = .true.
+       keepSpcActive(ind_N)        = .true.
+       keepSpcActive(ind_OCS)      = .true.
+    ENDIF
+
+    !-----------------------------------------------------------------------
     ! MAIN LOOP: Compute reaction rates and call chemical solver
     !
     ! Variables not listed here are held THREADPRIVATE in gckpp_Global.F90
@@ -590,6 +623,15 @@ CONTAINS
        Thread    = OMP_GET_THREAD_NUM() + 1 ! OpenMP thread number
 #endif
 #endif
+
+       ! Control keepActive functionality (avoid else to avoid branching)
+       IF ( STRATBOX ) THEN
+          keepActive = .true.
+       ENDIF
+
+       IF ( .not. STRATBOX ) THEN
+          keepActive = .false.
+       ENDIF
 
        ! Start measuring KPP-related routine timing for this grid box
        IF ( State_Diag%Archive_KppTime ) THEN
