@@ -899,7 +899,18 @@ CONTAINS
        ! Starting value for integration time step
        RCNTRL(3) = State_Chm%KPPHvalue(I,J,L)
 
-       RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
+       ! Auto-reduce threshold.
+       ! Pressure-dependent method 1:
+       !                                                            Mid-Pressure at Level
+       !   Actual_Threshold = AUTOREDUCE_THRESHOLD (at surface) * --------------------------
+       !                                                           "Mid-Pressure" at Sfc.
+       IF ( Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
+          RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD * State_Met%PMID(I,J,L) / State_Met%PMID(I,J,1)
+       ENDIF
+
+       IF ( .not. Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
+          RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
+       ENDIF
 
        !=====================================================================
        ! Integrate the box forwards
