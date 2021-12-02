@@ -207,6 +207,7 @@ CONTAINS
 
     ! Rate of change diagnostics
     REAL(dp)               :: CINIT(NSPEC)
+    REAL(dp)               :: P_VAR(NVAR), D_VAR(NVAR)      ! For compatibility with Fun_SPLIT
 
     ! Grid box integration time diagnostic
     REAL(fp)               :: TimeStart, TimeEnd
@@ -600,6 +601,7 @@ CONTAINS
     !$OMP PRIVATE( Aout,     Thread,   RC,      S,         LCH4             )&
     !$OMP PRIVATE( OHreact,  PCO_TOT,  PCO_CH4, PCO_NMVOC                   )&
     !$OMP PRIVATE( TimeStart,TimeEnd                                        )&
+    !$OMP PRIVATE( CINIT,    P_VAR,    D_VAR                                )&
     !$OMP COLLAPSE( 3                                                       )&
     !$OMP SCHEDULE( DYNAMIC, 24                                             )
     DO L = 1, State_Grid%NZ
@@ -889,6 +891,15 @@ CONTAINS
        !       State_Diag%RxnRate(I,J,L,S) = Aout(N)
        !    ENDDO
        ! ENDIF
+
+       ! This version uses Fun_SPLIT (hplin, 12/2/21)
+       IF ( State_Diag%Archive_RxnRate ) THEN
+          CALL Fun_SPLIT( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
+          DO S = 1, State_Diag%Map_RxnRate%nSlots
+             N = State_Diag%Map_RxnRate%slot2Id(S)
+             State_Diag%RxnRate(I,J,L,S) = Aout(N)
+          ENDDO
+       ENDIF
 
        !=====================================================================
        ! Set options for the KPP Integrator (M. J. Evans)
