@@ -34,18 +34,19 @@ CONTAINS
 
 
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-! 
-! Fun_SPLIT - time derivatives of variables - Split form
+!
+! Fun_SPLIT - Fun_SPLIT - time derivatives of variables - Split form
 !   Arguments :
 !      V         - Concentrations of variable species (local)
 !      F         - Concentrations of fixed species (local)
 !      RCT       - Rate constants (local)
 !      P_VAR     - Production term
 !      D_VAR     - Destruction term
-! 
+!      Aout      - Array to return rxn rates for diagnostics (OPTIONAL)
+!
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SUBROUTINE Fun_SPLIT ( V, F, RCT, P_VAR, D_VAR )
+SUBROUTINE Fun_SPLIT ( V, F, RCT, P_VAR, D_VAR, Aout )
 
 ! V - Concentrations of variable species (local)
   REAL(kind=dp) :: V(NVAR)
@@ -57,7 +58,8 @@ SUBROUTINE Fun_SPLIT ( V, F, RCT, P_VAR, D_VAR )
   REAL(kind=dp) :: P_VAR(NVAR)
 ! D_VAR - Destruction term
   REAL(kind=dp) :: D_VAR(NVAR)
-
+!### Aout - Array for returning KPP reaction rates for diagnostics
+  REAL(kind=dp), OPTIONAL :: Aout(NREACT)
 
 ! Computation of equation rates
   A(1) = RCT(1)*V(250)*V(263)
@@ -911,6 +913,12 @@ SUBROUTINE Fun_SPLIT ( V, F, RCT, P_VAR, D_VAR )
   A(851) = RCT(851)*V(220)
   A(852) = RCT(852)*V(189)
   A(853) = RCT(853)*V(189)
+
+
+!### KPP 2.3.0_gc, Bob Yantosca (11 Feb 2021)
+!### Use Aout to return reaction rates
+  IF ( PRESENT( Aout ) ) Aout = A
+
 
 ! Production function
 IF (DO_FUN(1)) &
