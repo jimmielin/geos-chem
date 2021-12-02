@@ -205,6 +205,9 @@ CONTAINS
     REAL(fp)               :: OHreact
     REAL(dp)               :: Vloc(NVAR), Aout(NREACT)
 
+    ! Rate of change diagnostics
+    REAL(dp)               :: CINIT(NSPEC)
+
     ! Grid box integration time diagnostic
     REAL(fp)               :: TimeStart, TimeEnd
 
@@ -851,6 +854,9 @@ CONTAINS
        VAR(1:NVAR) = C(1:NVAR)
        FIX         = C(NVAR+1:NSPEC)
 
+       ! Reset CINIT for SpeciesdConc diagnostic
+       CINIT       = C(1:NSPEC)
+
        !====================================================================
        ! Update reaction rates
        !====================================================================
@@ -1136,10 +1142,17 @@ CONTAINS
           ! Set negative concentrations to zero
           C(N) = MAX( C(N), 0.0E0_dp )
 
-          ! Copy concentrations back into State_Chm%Species
+          ! Copy concentrations back into State_Chm%Species [molec/cm3]
           State_Chm%Species(I,J,L,SpcID) = REAL( C(N), kind=fp )
 
        ENDDO
+
+       ! Copy species concentration delta into State_Chm%Species
+       IF ( State_Diag%Archive_SpeciesdConc ) THEN
+          DO N = 1, NSPEC
+             State_Diag%SpeciesdConc(I,J,L,N) = (C(N) - CINIT(N))/DT
+          ENDDO
+       ENDIF
 
        IF ( Input_Opt%useTimers ) THEN
           CALL Timer_End( "  -> KPP", RC, InLoop=.TRUE., ThreadNum=Thread )

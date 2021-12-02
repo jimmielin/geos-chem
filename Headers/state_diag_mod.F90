@@ -117,6 +117,11 @@ MODULE State_Diag_Mod
      TYPE(DgnMap),       POINTER :: Map_SpeciesConcMND
      LOGICAL                     :: Archive_SpeciesConcMND
 
+     ! Delta of species concentrations
+     REAL(f8),           POINTER :: SpeciesdConc(:,:,:,:)
+     TYPE(DgnMap),       POINTER :: Map_SpeciesdConc
+     LOGICAL                     :: Archive_SpeciesdConc
+
 #ifdef ADJOINT
      ! Adjoint variables for diagnostic output
      REAL(f8),           POINTER :: SpeciesAdj(:,:,:,:)
@@ -1149,6 +1154,11 @@ CONTAINS
     State_Diag%SpeciesConcMND                      => NULL()
     State_Diag%Map_SpeciesConcMND                  => NULL()
     State_Diag%Archive_SpeciesConcMND              = .FALSE.
+
+    ! rate of change diagnostic
+    State_Diag%SpeciesdConc                        => NULL()
+    State_Diag%Map_SpeciesdConc                    => NULL()
+    State_Diag%Archive_SpeciesdConc                = .FALSE.
 
 #ifdef ADJOINT
     State_Diag%SpeciesAdj                          => NULL()
@@ -2185,6 +2195,30 @@ CONTAINS
          Ptr2Data       = State_Diag%SpeciesConcMND,                         &
          archiveData    = State_Diag%Archive_SpeciesConcMND,                 &
          mapData        = State_Diag%Map_SpeciesConcMND,                     &
+         diagId         = diagId,                                            &
+         diagFlag       = 'S',                                               &
+         RC             = RC                                                )
+
+    IF ( RC /= GC_SUCCESS ) THEN
+       errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+       CALL GC_Error( errMsg, RC, thisLoc )
+       RETURN
+    ENDIF
+
+    !------------------------------------------------------------------------
+    ! Species concentration rate of change diagnostic [molec/cm3/s]
+    !------------------------------------------------------------------------
+    diagId  = 'SpeciesdConc'
+    CALL Init_and_Register(                                                  &
+         Input_Opt      = Input_Opt,                                         &
+         State_Chm      = State_Chm,                                         &
+         State_Diag     = State_Diag,                                        &
+         State_Grid     = State_Grid,                                        &
+         DiagList       = Diag_List,                                         &
+         TaggedDiagList = TaggedDiag_List,                                   &
+         Ptr2Data       = State_Diag%SpeciesdConc,                           &
+         archiveData    = State_Diag%Archive_SpeciesdConc,                   &
+         mapData        = State_Diag%Map_SpeciesdConc,                       &
          diagId         = diagId,                                            &
          diagFlag       = 'S',                                               &
          RC             = RC                                                )
@@ -8805,6 +8839,12 @@ CONTAINS
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
+    CALL Finalize( diagId   = 'SpeciesdConc',                                &
+                   Ptr2Data = State_Diag%SpeciesdConc,                       &
+                   mapData  = State_Diag%Map_SpeciesdConc,                   &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
 #ifdef ADJOINT
     CALL Finalize( diagId   = 'SpeciesAdj',                                  &
                    Ptr2Data = State_Diag%SpeciesAdj,                         &
@@ -10251,6 +10291,13 @@ CONTAINS
     ELSE IF ( TRIM( Name_AllCaps ) == 'SPECIESCONCMND' ) THEN
        IF ( isDesc    ) Desc  = 'Concentration of species'
        IF ( isUnits   ) Units = 'molec cm-3'
+       IF ( isRank    ) Rank  = 3
+       IF ( isTagged  ) TagId = 'ALL'
+       IF ( isSrcType ) SrcType  = KINDVAL_F8
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'SPECIESDCONC' ) THEN
+       IF ( isDesc    ) Desc  = 'Rate of change for concentration of species'
+       IF ( isUnits   ) Units = 'molec cm-3 s-1'
        IF ( isRank    ) Rank  = 3
        IF ( isTagged  ) TagId = 'ALL'
        IF ( isSrcType ) SrcType  = KINDVAL_F8
