@@ -2220,7 +2220,7 @@ CONTAINS
          archiveData    = State_Diag%Archive_SpeciesdConc,                   &
          mapData        = State_Diag%Map_SpeciesdConc,                       &
          diagId         = diagId,                                            &
-         diagFlag       = 'S',                                               &
+         diagFlag       = 'K',                                               &
          RC             = RC                                                )
 
     IF ( RC /= GC_SUCCESS ) THEN
