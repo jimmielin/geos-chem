@@ -265,7 +265,6 @@ while [ "${valid_met}" -eq 0 ]; do
 	met_cn_year='2015'
 	pressure_unit='Pa '
 	pressure_scale='0.01'
-	offline_dust_sf='3.86e-4'
     elif [[ ${met_num} = "2" ]]; then
 	met_name='GEOSFP'
 	met_name_lc="geosfp"
@@ -278,7 +277,6 @@ while [ "${valid_met}" -eq 0 ]; do
 	met_cn_year='2011'
 	pressure_unit='hPa'
 	pressure_scale='1.0 '
-	offline_dust_sf='6.42e-5'
     elif [[ ${met_num} = "3" ]]; then
 	met_name='ModelE2.1'
 	met_name_lc='modele2.1'
@@ -291,7 +289,6 @@ while [ "${valid_met}" -eq 0 ]; do
 	met_cn_year='1950'
 	pressure_unit='Pa '
 	pressure_scale='0.01'
-	offline_dust_sf='1.0'
     else
 	valid_met=0
 	printf "Invalid meteorology option. Try again.\n"
@@ -777,7 +774,6 @@ sed_ie "s|{MET_DIR}|${met_dir}|"          HEMCO_Config.rc
 sed_ie "s|{NATIVE_RES}|${met_native}|"    HEMCO_Config.rc
 sed_ie "s|{LATRES}|${met_latres}|"        HEMCO_Config.rc
 sed_ie "s|{LONRES}|${met_lonres}|"        HEMCO_Config.rc
-sed_ie "s|{DUST_SF}|${offline_dust_sf}|"  HEMCO_Config.rc
 sed_ie "s|{DEAD_TF}|${dead_tf}|"          HEMCO_Config.rc
 sed_ie "s|{MET_AVAIL}|${met_avail}|"      HEMCO_Config.rc
 
@@ -980,7 +976,7 @@ if [[ "x${nested_sim}" == "xT" ]]; then
 	replace_colon_sep_val "--> NEI2011_MONMEAN" false HEMCO_Config.rc
 	replace_colon_sep_val "--> NEI2011_HOURLY"  false  HEMCO_Config.rc
     fi
-    
+
     printf "\n  -- Nested-grid simulations use global high-reoslution met fields"
     printf "\n     by default. To improve run time, you may choose to use cropped"
     printf "\n     met fields by modifying the file paths and names in HEMCO_Config.rc"
@@ -1006,17 +1002,39 @@ if [[ ${sim_name} =~ "POPs" ]]; then
 fi
 
 #--------------------------------------------------------------------
-# Change timesteps for nested-grid simulations
-# Transport should be 300s (5min); chemistry should be 600s (10min)
+# Nested-grid simulation timesteps:
+#
+# 0.25 x 0.3125 : Use reduced transport timestep = 300  s (5  min)
+#                 Use reduced chemistry timestep = 600  s (10 min)
+#
+# 0.5  x 0.625  : Use default transport timestep = 600  s (10 min)
+#                 Use default chemistry timestep = 1200 s (20 min)
+#
+# It has been shown that fullchem nested-grid simulations on 0.5 x
+# 0.625 grids will run more slowly if 300s/600s timesteps are used.
+# To avoid this slowdown, it is OK to use 600s/1200s timesteps.
+#
+# For the 0.25 x 0.3125 grids, it is necessary to use the 300s/600s
+# timesteps in order to avoid violating the Courant limit.
+#
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%% EXCEPTION: 0.5 x 0.625 CH4 simulations will use 300s/600s %%%
+# %%% timesteps in order to avoid violating the Courant limit.  %%%
+# %%% The larger timesteps have proven to be problematic for    %%%
+# %%% CH4 simulations that are used to set up inversions.       %%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #--------------------------------------------------------------------
-if [[ "x${domain_name}" == "xAS"     ]] || \
+if [[ "x${met_resolution}" == "x025x03125"                           ]] || \
+   [[ "x${met_resolution}" == "x05x0625" && "x${sim_name}" == "xCH4" ]];  then
+    if [[ "x${domain_name}" == "xAS"     ]] || \
        [[ "x${domain_name}" == "xEU"     ]] || \
        [[ "x${domain_name}" == "xNA"     ]] || \
        [[ "x${domain_name}" == "xcustom" ]]; then
-    cmd='s|\[sec\]: 600|\[sec\]: 300|'
-    sed_ie "$cmd" input.geos
-    cmd='s|\[sec\]: 1200|\[sec\]: 600|'
-    sed_ie "$cmd" input.geos
+	cmd='s|\[sec\]: 600|\[sec\]: 300|'
+	sed_ie "$cmd" input.geos
+	cmd='s|\[sec\]: 1200|\[sec\]: 600|'
+	sed_ie "$cmd" input.geos
+     fi
 fi
 
 # Modify default settings for GCAP simulations
@@ -1061,16 +1079,21 @@ if [[ ${met_name} = "MERRA2" ]] || [[ ${met_name} = "GEOSFP" ]]; then
 
     if [[ "x${sim_name}" == "xfullchem" || "x${sim_name}" == "xaerosol" ]]; then
 
-	# For TOMAS simulations, use restarts provided by the TOMAS team
-	# For other fullchem simulations, use restart from latest benchmark
+        # NOTE: We need to read the fullchem and TOMAS restart files from
+	# the v2021-09/ folder.  These contain extra species (e.g HMS),
+	# for chemistry updates that were added in 13.3.0.  This is necessary
+	# to avoid GEOS-Chem Classic simulations from halting if these
+	# species are not found in the restart file (time cycle flag "EFYO").
+	#   -- Bob Yantosca (22 Sep 2021)
+	#
 	# Aerosol-only simulations can use the fullchem restart since all of the
-	#  aerosol species are included
+	# aerosol species are included.
 	if [[ "x${sim_extra_option}" == "xTOMAS15" ]]; then
-	    sample_rst=${rst_root}/v2020-02/GEOSChem.Restart.TOMAS15.${startdate}_0000z.nc4
+	    sample_rst=${rst_root}/v2021-09/GEOSChem.Restart.TOMAS15.${startdate}_0000z.nc4
 	elif [[ "x${sim_extra_option}" == "xTOMAS40" ]]; then
-	    sample_rst=${rst_root}/v2020-02/GEOSChem.Restart.TOMAS40.${startdate}_0000z.nc4
+	    sample_rst=${rst_root}/v2021-09/GEOSChem.Restart.TOMAS40.${startdate}_0000z.nc4
 	else
-	    sample_rst=${rst_root}/GC_13.0.0/GEOSChem.Restart.fullchem.${startdate}_0000z.nc4
+	    sample_rst=${rst_root}/v2021-09/GEOSChem.Restart.fullchem.${startdate}_0000z.nc4
 	fi
 
     elif [[ "x${sim_name}" == "xTransportTracers" ]]; then
