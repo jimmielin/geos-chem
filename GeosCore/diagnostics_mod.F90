@@ -806,10 +806,10 @@ CONTAINS
     !=======================================================================
     ! Copy species to SpeciesConc (concentrations diagnostic) [v/v dry]
     !=======================================================================
-    IF ( State_Diag%Archive_SpeciesConc ) THEN
+    IF ( State_Diag%Archive_SpeciesConcMND ) THEN
 
        ! Point to mapping obj specific to SpeciesConc diagnostic collection
-       mapData => State_Diag%Map_SpeciesConc
+       mapData => State_Diag%Map_SpeciesConcMND
 
        !$OMP PARALLEL DO       &
        !$OMP DEFAULT( SHARED ) &
