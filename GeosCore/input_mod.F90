@@ -2406,7 +2406,7 @@ CONTAINS
                             Input_Opt%GAMMA_HO2
        WRITE( 6, 100     ) 'Use auto-reduce solver?     : ', &
                             Input_Opt%USE_AUTOREDUCE
-       WRITE( 6, 110     ) 'Auto-reduce threshold       : ', &
+       WRITE( 6, 120     ) 'Auto-reduce threshold       : ', &
                             Input_Opt%AUTOREDUCE_THRESHOLD
        WRITE( 6, 100     ) 'Keep strat. spec. active?   : ', &
                             Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE
@@ -2426,6 +2426,7 @@ CONTAINS
     ! FORMAT statements
 100 FORMAT( A, L5  )
 110 FORMAT( A, F4.2 )
+120 FORMAT( A, F5.1 )
 
   END SUBROUTINE READ_CHEMISTRY_MENU
 !EOC
