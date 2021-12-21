@@ -408,6 +408,8 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
        Autoreduce = .false.
 !       PRINT *, 'Auto-reduction Threshold < 0. Defaulting to ', Redux_Threshold
     ENDIF
+! Reset rNVAR for the purpose of tracking the diagnostic
+   rNVAR = NVAR
 !~~~>  CALL Auto-reducing Rosenbrock method
     IF ( Autoreduce ) &
          CALL ros_cIntegrator(Y, Tstart, Tend, Texit,   &

@@ -612,6 +612,12 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: KppTime(:,:,:)
      LOGICAL                     :: Archive_KppTime
 
+     LOGICAL                     :: Archive_KppStiffness
+     ! REAL(f4),           POINTER :: KppLifetime     (:,:,:)      ! Species lifetime, C/(P-L)
+     REAL(f4),           POINTER :: KppStiffnessAll (:,:,:)      ! Stiffness ratio, all species
+     REAL(f4),           POINTER :: KppStiffnessFast(:,:,:)      ! Stiffness ratio, fast species only (AR only)
+     REAL(f4),           POINTER :: KppStiffnessSlow(:,:,:)      ! Stiffness ratio, slow species only (AR only)
+
      LOGICAL                     :: Archive_KppDiags
 
      !%%%%% Chemistry metrics (e.g. mean OH, MCF lifetime, CH4 lifetime) %%%%%
@@ -1048,15 +1054,6 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: TotCol(:,:,:)
      TYPE(DgnMap),       POINTER :: Map_TotCol
      LOGICAL                     :: Archive_TotCol
-#endif
-
-#ifdef MODEL_WRF
-     !----------------------------------------------------------------------
-     ! The following diagnostics are only used when
-     ! GEOS-Chem is interfaced into WRF (as WRF-GC)
-     !----------------------------------------------------------------------
-     REAL(f4),           POINTER :: KppError(:,:,:)
-     LOGICAL                     :: Archive_KppError
 #endif
 
      !----------------------------------------------------------------------
@@ -1649,6 +1646,12 @@ CONTAINS
 
     State_Diag%KppAutoReducerNVAR                  => NULL()
     State_Diag%Archive_KppAutoReducerNVAR          = .FALSE.
+
+    ! State_Diag%KppLifetime                         => NULL()
+    State_Diag%KppStiffnessAll                     => NULL()
+    State_Diag%KppStiffnessFast                    => NULL()
+    State_Diag%KppStiffnessSlow                    => NULL()
+    State_Diag%Archive_KppStiffness                = .FALSE.
 
     State_Diag%KppTime                             => NULL()
     State_Diag%Archive_KppTime                     = .FALSE.
@@ -4791,7 +4794,7 @@ CONTAINS
        ENDIF
 
        !-------------------------------------------------------------------
-       ! Number of species in reduced mechanism (NVAR - NRMV)
+       ! AR only -- Number of species in reduced mechanism (NVAR - NRMV)
        !-------------------------------------------------------------------
        diagID = 'KppAutoReducerNVAR'
        CALL Init_and_Register(                                               &
@@ -4825,6 +4828,72 @@ CONTAINS
             TaggedDiagList = TaggedDiag_List,                                &
             Ptr2Data       = State_Diag%KppTime,                             &
             archiveData    = State_Diag%Archive_KppTime,                     &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
+       ! Stiffness of whole KPP system
+       !-------------------------------------------------------------------
+       diagID = 'KppStiffnessAll'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppStiffnessAll,                     &
+            archiveData    = State_Diag%Archive_KppStiffness,                &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
+       ! AR only -- Stiffness of KPP system (fast species)
+       !-------------------------------------------------------------------
+       diagID = 'KppStiffnessFast'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppStiffnessFast,                    &
+            archiveData    = State_Diag%Archive_KppStiffness,                &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
+       ! AR only -- Stiffness of reduced KPP system (slow species)
+       !-------------------------------------------------------------------
+       diagID = 'KppStiffnessSlow'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppStiffnessSlow,                    &
+            archiveData    = State_Diag%Archive_KppStiffness,                &
             diagId         = diagId,                                         &
             RC             = RC                                             )
 
@@ -4965,6 +5034,12 @@ CONTAINS
                 diagID = 'KppAutoReducerNVAR'
              CASE( 34 )
                 diagID = 'KppTime'
+             CASE( 35 )
+                diagID = 'KppStiffnessAll'
+             CASE( 36 )
+                diagID = 'KppStiffnessFast'
+             CASE( 37 )
+                diagID = 'KppStiffnessSlow'  ! hplin 12/19/21: check if Kpp only appropriate for full-chem?
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -8851,6 +8926,7 @@ CONTAINS
                                     State_Diag%Archive_KppSmDecomps       .or. &
                                     State_Diag%Archive_KppAutoReducerNVAR .or. &
                                     State_Diag%Archive_KppTime            .or. &
+                                    State_Diag%Archive_KppStiffness       .or. &
                                     State_Diag%Archive_KppDiags             )
 
     State_Diag%Archive_RadOptics  = ( State_Diag%Archive_RadAODWL1     .or. &
@@ -10083,6 +10159,21 @@ CONTAINS
 
     CALL Finalize( diagId   = 'KppTime',                                     &
                    Ptr2Data = State_Diag%KppTime,                            &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppStiffnessAll',                             &
+                   Ptr2Data = State_Diag%KppStiffnessAll,                    &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppStiffnessFast',                            &
+                   Ptr2Data = State_Diag%KppStiffnessFast,                   &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppStiffnessSlow',                            &
+                   Ptr2Data = State_Diag%KppStiffnessSlow,                   &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
@@ -11555,6 +11646,21 @@ CONTAINS
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPTIME' ) THEN
        IF ( isDesc    ) Desc  = 'Time spent in grid box'
        IF ( isUnits   ) Units = 's'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSTIFFNESSALL' ) THEN
+       IF ( isDesc    ) Desc  = 'Stiffness of chemical mechanism input to KPP, all species'
+       IF ( isUnits   ) Units = '1'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSTIFFNESSFAST' ) THEN
+       IF ( isDesc    ) Desc  = 'Stiffness of chemical mechanism input to KPP, fast species in auto-reduce only'
+       IF ( isUnits   ) Units = '1'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSTIFFNESSSLOW' ) THEN
+       IF ( isDesc    ) Desc  = 'Hypothetical stiffness of slow species in auto-reduce only'
+       IF ( isUnits   ) Units = '1'
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'LOSSPOPPOCPOBYGASPHASE' ) THEN

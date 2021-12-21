@@ -204,6 +204,12 @@ CONTAINS
     ! Grid box integration time diagnostic
     REAL(fp)               :: TimeStart, TimeEnd
 
+    ! Stiffness diagnostic
+    REAL(dp)               :: SPC_LIFETIME(NVAR)
+    REAL(dp)               :: SPC_LIFETIME_H,  SPC_LIFETIME_L,  &
+                              SPC_LIFETIME_Hf, SPC_LIFETIME_Lf, &
+                              SPC_LIFETIME_Hs, SPC_LIFETIME_Ls      ! hplin, 12/20/21
+
     !=======================================================================
     ! Do_FullChem begins here!
     !=======================================================================
@@ -248,6 +254,11 @@ CONTAINS
        IF (State_Diag%Archive_KppSubsts   ) State_Diag%KppSubsts      = 0.0_f4
        IF (State_Diag%Archive_KppSmDecomps) State_Diag%KppSmDecomps   = 0.0_f4
        IF (State_Diag%Archive_KppAutoReducerNVAR) State_Diag%KppAutoReducerNVAR   = 0.0_f4
+       IF (State_Diag%Archive_KppStiffness) THEN
+          State_Diag%KppStiffnessAll  = 0.0_f4
+          State_Diag%KppStiffnessSlow = 0.0_f4
+          State_Diag%KppStiffnessFast = 0.0_f4
+       ENDIF
     ENDIF
 
     ! Keep track of the boxes where it is local noon in the JNoonFrac
@@ -509,10 +520,9 @@ CONTAINS
     !
     ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
     !=====================================================================
+    ICNTRL(8) = 0
     IF ( Input_Opt%USE_AUTOREDUCE .and. .not. FIRSTCHEM ) THEN
        ICNTRL(8) = 1
-    ELSE
-       ICNTRL(8) = 0
     ENDIF
 
     !=======================================================================
@@ -589,7 +599,10 @@ CONTAINS
     !$OMP PRIVATE( Aout,     Thread,   RC,      S,         LCH4             )&
     !$OMP PRIVATE( OHreact,  PCO_TOT,  PCO_CH4, PCO_NMVOC                   )&
     !$OMP PRIVATE( TimeStart,TimeEnd                                        )&
-    !$OMP PRIVATE( CINIT,    P_VAR,    D_VAR                                )&
+    !$OMP PRIVATE( CINIT,    P_VAR,    D_VAR,   SPC_LIFETIME                )&
+    !$OMP PRIVATE( SPC_LIFETIME_H,     SPC_LIFETIME_L                       )&
+    !$OMP PRIVATE( SPC_LIFETIME_Hf,    SPC_LIFETIME_Lf                      )&
+    !$OMP PRIVATE( SPC_LIFETIME_Hs,    SPC_LIFETIME_Ls                      )&
     !$OMP COLLAPSE( 3                                                       )&
     !$OMP SCHEDULE( DYNAMIC, 24                                             )
     DO L = 1, State_Grid%NZ
@@ -611,6 +624,7 @@ CONTAINS
        PCO_TOT   = 0.0_fp                   ! P/L diag: Total P(CO)
        PCO_CH4   = 0.0_fp                   ! P/L diag: P(CO) from CH4
        PCO_NMVOC = 0.0_fp                   ! P/L diag: P(CO) from NMVOC
+       SPC_LIFETIME = -999.0_fp             ! Stiffness diag: temporary lifetime for each spec [s]
 #ifdef MODEL_CLASSIC
 #ifndef NO_OMP
        Thread    = OMP_GET_THREAD_NUM() + 1 ! OpenMP thread number
@@ -949,12 +963,18 @@ CONTAINS
        !    ENDDO
        ! ENDIF
 
-       IF ( State_Diag%Archive_RxnRate ) THEN
+       IF ( State_Diag%Archive_RxnRate .or. State_Diag%Archive_KppStiffness ) THEN
+          ! Force DO_FUN so all rates are calculated
+          DO_FUN = .true.
+
           CALL Fun_SPLIT( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
-          DO S = 1, State_Diag%Map_RxnRate%nSlots
-             N = State_Diag%Map_RxnRate%slot2Id(S)
-             State_Diag%RxnRate(I,J,L,S) = Aout(N)
-          ENDDO
+
+          IF ( State_Diag%Archive_RxnRate ) THEN
+             DO S = 1, State_Diag%Map_RxnRate%nSlots
+                N = State_Diag%Map_RxnRate%slot2Id(S)
+               State_Diag%RxnRate(I,J,L,S) = Aout(N)
+             ENDDO
+          ENDIF
        ENDIF
 
        !=====================================================================
@@ -984,6 +1004,15 @@ CONTAINS
        IF ( .not. Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
           RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
        ENDIF
+
+       ! Testing only: Force all species near terminator
+       ! In the future this needs to be tweakable as an option (hplin, 12/14/21)
+       !
+       ! Trial and error has shown that a [0.1, 0.2] range for relaxation is best
+       ! IF ( ( State_Met%SUNCOSmid(I,J) > -0.2e+0_fp .and. State_Met%SUNCOSmid(I,J) < -0.1e+0_fp ) .or. &
+       !      ( State_Met%SUNCOSmid(I,J) >  0.1e+0_fp .and. State_Met%SUNCOSmid(I,J) <  0.2e+0_fp ) ) THEN
+       !    RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
+       ! ENDIF
 
        !=====================================================================
        ! Integrate the box forwards
@@ -1072,6 +1101,73 @@ CONTAINS
           ! # of species in auto-reduced mechanism
           IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppAutoReducerNVAR ) THEN
              State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
+          ENDIF
+       ENDIF
+
+       ! Calculate species lifetimes if necessary, so the stiffness of the mechanism
+       ! can be approximated. Only the VAR are used here (hplin, 12/20/21)
+       !
+       ! Note that the stiffness calculation has to be done AFTER the Integrate loop,
+       ! because only then the DO_FUN is updated with correct values by the AR algorithm.
+       IF ( State_Diag%Archive_KppStiffness ) THEN
+          ! Try to do this within one single loop... Separate by autoreduce mode,
+          ! but this is one loop at most.
+          SPC_LIFETIME_H  = -999.0_dp
+          SPC_LIFETIME_L  = -999.0_dp
+          SPC_LIFETIME_Hf = -999.0_dp   ! Fast species (AR only)
+          SPC_LIFETIME_Lf = -999.0_dp
+          SPC_LIFETIME_Hs = -999.0_dp   ! Slow species (AR only)
+          SPC_LIFETIME_Ls = -999.0_dp
+
+          IF ( Input_Opt%USE_AUTOREDUCE ) THEN
+             DO S = 1, NVAR
+                ! SPC_LIFETIME(S) = C(S) / (P_VAR(S) - D_VAR(S))
+                IF ( D_VAR(S) .le. 0 ) THEN
+                  CYCLE
+                ENDIF
+               
+                ! Fun_Split ( ... P, D )
+                ! Ydot = P - Dy ... k = D = Los0, tau = 1/k = 1/D. C is not involved here
+                SPC_LIFETIME(S) = 1 / D_VAR(S)
+               
+                IF ( DO_FUN(S) ) THEN        ! Fast species
+                   IF ( SPC_LIFETIME(S) .gt. SPC_LIFETIME_Hf                          )  SPC_LIFETIME_Hf = SPC_LIFETIME(S)
+                   IF ( SPC_LIFETIME(S) .lt. SPC_LIFETIME_Lf .or. SPC_LIFETIME_Lf < 0 )  SPC_LIFETIME_Lf = SPC_LIFETIME(S)
+                ENDIF
+
+                IF ( .not. DO_FUN(S) ) THEN  ! Slow species
+                   IF ( SPC_LIFETIME(S) .gt. SPC_LIFETIME_Hs                          )  SPC_LIFETIME_Hs = SPC_LIFETIME(S)
+                   IF ( SPC_LIFETIME(S) .lt. SPC_LIFETIME_Ls .or. SPC_LIFETIME_Ls < 0 )  SPC_LIFETIME_Ls = SPC_LIFETIME(S)
+                ENDIF
+
+                IF ( SPC_LIFETIME(S) .gt. SPC_LIFETIME_H                         )  SPC_LIFETIME_H = SPC_LIFETIME(S)
+                IF ( SPC_LIFETIME(S) .lt. SPC_LIFETIME_L .or. SPC_LIFETIME_L < 0 )  SPC_LIFETIME_L = SPC_LIFETIME(S)
+             ENDDO
+
+             ! WRITE(6,*) "hplin: I,J,L,slh,sll,f,s", I,J,L,SPC_LIFETIME_H,SPC_LIFETIME_L,SPC_LIFETIME_Hf,SPC_LIFETIME_Lf
+             ! IF ( I .eq. 15 .and. J .eq. 25 .and. L .eq. 1 ) THEN
+             !   WRITE(6,*) "hplin: all spc lifetime:", SPC_LIFETIME
+             ! ENDIF
+
+             State_Diag%KppStiffnessAll (I,J,L) = SPC_LIFETIME_H  / SPC_LIFETIME_L
+             State_Diag%KppStiffnessFast(I,J,L) = SPC_LIFETIME_Hf / SPC_LIFETIME_Lf
+             State_Diag%KppStiffnessSlow(I,J,L) = SPC_LIFETIME_Hs / SPC_LIFETIME_Ls
+          ENDIF
+
+          IF ( .not. Input_Opt%USE_AUTOREDUCE ) THEN
+             DO S = 1, NVAR
+                ! SPC_LIFETIME(S) = C(S) / (P_VAR(S) - D_VAR(S))
+                IF ( D_VAR(S) .le. 0 ) THEN
+                  CYCLE
+                ENDIF
+
+                SPC_LIFETIME(S) = 1 / D_VAR(S)
+
+                IF ( SPC_LIFETIME(S) .gt. SPC_LIFETIME_H                         )  SPC_LIFETIME_H = SPC_LIFETIME(S)
+                IF ( SPC_LIFETIME(S) .lt. SPC_LIFETIME_L .or. SPC_LIFETIME_L < 0 )  SPC_LIFETIME_L = SPC_LIFETIME(S)
+             ENDDO
+
+             State_Diag%KppStiffnessAll (I,J,L) = SPC_LIFETIME_H  / SPC_LIFETIME_L
           ENDIF
        ENDIF
 
@@ -1269,7 +1365,7 @@ CONTAINS
 
        ENDDO
 
-       ! Copy species concentration delta into State_Chm%Species
+       ! Copy species concentration delta into State_Diag%SpeciesdConc
        IF ( State_Diag%Archive_SpeciesdConc ) THEN
           DO N = 1, NSPEC
              State_Diag%SpeciesdConc(I,J,L,N) = (C(N) - CINIT(N))/DT
