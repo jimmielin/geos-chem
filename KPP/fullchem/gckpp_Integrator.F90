@@ -728,6 +728,7 @@ Stage: DO istage = 1, ros_S
 ! ~~~~ Local variables
    REAL(kind=dp) :: Ynew(N), Fcn0(N), Fcn(N), Prod(N), Prd0(N), Loss(N), Los0(N)
    REAL(kind=dp) :: K(NVAR*ros_S), dFdT(N)
+   REAL(kind=dp) :: Ypred(N)
 #ifdef FULL_ALGEBRA    
    REAL(kind=dp) :: Jac0(N,N), Ghimj(N,N)
 #else
@@ -940,9 +941,44 @@ Stage: DO istage = 1, ros_S
    ! -- DO_FUN loops over 1,NVAR. Only needs to loop over NVAR-rNVAR
    !    but the structure doesn't exist. Maybe worth considering 
    !    for efficiency purposes.
+   ! DO i=1,N
+   !    IF (.not. DO_FUN(i)) &
+   !         call autoreduce_1stOrder(i,Y(i),Prd0(i),Los0(i),Tstart,Tend)
+   ! ENDDO
+
+   ! alternate improved version using predictor-corrector method (ET solver)
+   ! Dabdub and Seinfeld (1995) ET solver based on 6.3 in Brasseur and Jacob
+   ! (hplin, 1/7/22)
+   Ypred = Y ! copy first to preserve solved full spc.
    DO i=1,N
-      IF (.not. DO_FUN(i)) &
-           call autoreduce_1stOrder(i,Y(i),Prd0(i),Los0(i),Tstart,Tend)
+      IF (.not. DO_FUN(i)) THEN
+         ! make initial approximation not in-place
+         call autoreduce_1stOrderD(i,Y(i),Ypred(i),Prd0(i),Los0(i),Tstart,Tend)
+      ENDIF
+   ENDDO
+
+   ! unfortunate a second loop needed here need optimization FIXME hplin 1/7/22
+   ! because FunSplitTemplate reacts to DO_FUN it will not update with the correct
+   ! approximation so DO_FUN needs to be reset here and a shadow copy stored
+   DO_FUN2 = DO_FUN
+   DO_FUN = .true.
+   CALL FunSplitTemplate(T,Ypred,Fcn0,Prod,Loss) ! Reacts to DO_FUN(). Prod and Loss empty and recycled
+   DO_FUN = DO_FUN2
+   DO i=1,N
+      IF (.not. DO_FUN(i)) THEN
+         tau = 1/Loss(i)
+         IF ( tau .ge. 100*(Tend-Tstart) ) THEN
+            call AutoReduce_correctorLong(i,Y(i),Ypred(i),Prd0(i),Los0(i),Prod(i),Loss(i),Tstart,Tend)
+         ENDIF
+
+         IF ( tau > 0.1*(Tend-Tstart) .and. tau < 100*(Tend-Tstart) ) THEN
+            call AutoReduce_correctorInterm(i,Y(i),Ypred(i),Prd0(i),Los0(i),Prod(i),Loss(i),Tstart,Tend)
+         ENDIF
+
+         IF ( tau .le. 0.1*(Tend-Tstart) ) THEN
+            call AutoReduce_correctorShort(i,Y(i),Ypred(i),Prd0(i),Los0(i),Prod(i),Loss(i),Tstart,Tend)
+         ENDIF
+      ENDIF
    ENDDO
 
 !~~~> Succesful exit
@@ -950,6 +986,65 @@ Stage: DO istage = 1, ros_S
 
  END SUBROUTINE ros_cIntegrator
 
+
+ ! Ydot = P - Dy, D = k = Los0
+ !
+ ! testing: AutoReduce_correctorLong (6.40), AutoReduce_correctorInterm (6.41)
+ !          AutoReduce_correctorShort
+ !
+ ! inputs: Y* (Ypred) which is initial predictor by autoreduce_1stOrder (exponential)
+ ! P, k, which are Prod and Loss by using Ypred array instead
+ ! and Tstart, Tend ([Ti, Tf] is deltaT) (hplin, 1/7/22)
+ SUBROUTINE AutoReduce_correctorLong(i,Y,Ypred,P,k,Ppred,kpred,Ti,Tf)
+   REAL(kind=dp), INTENT(INOUT) :: Y
+   REAL(kind=dp), INTENT(IN)    :: Ypred, Ppred, kpred, P, k, Ti, Tf
+   INTEGER,       INTENT(IN)    :: i
+
+   if (k .le. 1.d-30) return
+   if (Y .le. 1.d-30) return
+   Y = Y + (Tf-Ti)/2 * (P-k*Y+Ppred-kpred*Ypred)  ! trapezoidal rule
+ END SUBROUTINE AutoReduce_correctorLong
+
+ SUBROUTINE AutoReduce_correctorShort(i,Y,Ypred,P,k,Ppred,kpred,Ti,Tf)
+   REAL(kind=dp), INTENT(INOUT) :: Y
+   REAL(kind=dp), INTENT(IN)    :: Ypred, Ppred, kpred, P, k, Ti, Tf
+   INTEGER,       INTENT(IN)    :: i
+
+   if (k .le. 1.d-30) return
+   if (kpred .le. 1.d-30) return
+   if (Y .le. 1.d-30) return
+   Y = (P+Ppred)/4*(1/k+1/kpred)
+ END SUBROUTINE AutoReduce_correctorShort
+
+ SUBROUTINE AutoReduce_correctorInterm(i,Y,Ypred,P,k,Ppred,kpred,Ti,Tf)
+   REAL(kind=dp), INTENT(INOUT) :: Y
+   REAL(kind=dp), INTENT(IN)    :: Ypred, Ppred, kpred, P, k, Ti, Tf
+   INTEGER,       INTENT(IN)    :: i
+
+   REAL(kind=dp)                :: Zk
+
+   if (k .le. 1.d-30) return
+   if (kpred .le. 1.d-30) return
+   if (Y .le. 1.d-30) return
+   Zk = (P+Ppred)/4*(1/k+1/kpred)
+   Y  = Zk + (Ypred - Zk) * exp(-(Tf-Ti)/2*(1/k+1/kpred))
+ END SUBROUTINE AutoReduce_correctorInterm
+
+ ! No-inplace version of 1stOrder approximation
+ SUBROUTINE AutoReduce_1stOrderD(i,Y,Ypred,P,k,Ti,Tf)
+   REAL(kind=dp), INTENT(IN)    :: Y
+   REAL(kind=dp), INTENT(OUT)   :: Ypred
+   REAL(kind=dp), INTENT(IN)    :: P,k,Ti,Tf
+   INTEGER, INTENT(IN)          :: i
+   REAL(kind=dp)                :: term
+
+   if (k .le. 1.d-30) return
+   if (Y .le. 1.d-30) return
+   term = P/k
+   Ypred = term+(Y-term)*exp(-k*(Tf-Ti))
+ END SUBROUTINE AutoReduce_1stOrderD
+
+ ! 1st order approximation Shen et al. 2020 eq. 4
  SUBROUTINE AutoReduce_1stOrder(i,Y,P,k,Ti,Tf)
    REAL(kind=dp), INTENT(INOUT) :: Y
    REAL(kind=dp), INTENT(IN)    :: P,k,Ti,Tf
