@@ -1149,9 +1149,9 @@ CONTAINS
              !   WRITE(6,*) "hplin: all spc lifetime:", SPC_LIFETIME
              ! ENDIF
 
-             State_Diag%KppStiffnessAll (I,J,L) = SPC_LIFETIME_H  / SPC_LIFETIME_L
-             State_Diag%KppStiffnessFast(I,J,L) = SPC_LIFETIME_Hf / SPC_LIFETIME_Lf
-             State_Diag%KppStiffnessSlow(I,J,L) = SPC_LIFETIME_Hs / SPC_LIFETIME_Ls
+             State_Diag%KppStiffnessAll (I,J,L) = LOG10( SPC_LIFETIME_H  / SPC_LIFETIME_L  )
+             State_Diag%KppStiffnessFast(I,J,L) = LOG10( SPC_LIFETIME_Hf / SPC_LIFETIME_Lf )
+             State_Diag%KppStiffnessSlow(I,J,L) = LOG10( SPC_LIFETIME_Hs / SPC_LIFETIME_Ls )
           ENDIF
 
           IF ( .not. Input_Opt%USE_AUTOREDUCE ) THEN

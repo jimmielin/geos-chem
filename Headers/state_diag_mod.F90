@@ -11649,18 +11649,18 @@ CONTAINS
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSTIFFNESSALL' ) THEN
-       IF ( isDesc    ) Desc  = 'Stiffness of chemical mechanism input to KPP, all species'
-       IF ( isUnits   ) Units = '1'
+       IF ( isDesc    ) Desc  = 'Lifetime ratio of chemical mechanism input to KPP, all species'
+       IF ( isUnits   ) Units = 'log10 s s-1'
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSTIFFNESSFAST' ) THEN
-       IF ( isDesc    ) Desc  = 'Stiffness of chemical mechanism input to KPP, fast species in auto-reduce only'
-       IF ( isUnits   ) Units = '1'
+       IF ( isDesc    ) Desc  = 'Lifetime ratio of chemical mechanism input to KPP, fast species in auto-reduce only'
+       IF ( isUnits   ) Units = 'log10 s s-1'
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPSTIFFNESSSLOW' ) THEN
-       IF ( isDesc    ) Desc  = 'Hypothetical stiffness of slow species in auto-reduce only'
-       IF ( isUnits   ) Units = '1'
+       IF ( isDesc    ) Desc  = 'Lifetime ratio of slow species in auto-reduce only'
+       IF ( isUnits   ) Units = 'log10 s s-1'
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'LOSSPOPPOCPOBYGASPHASE' ) THEN
