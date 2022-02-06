@@ -150,7 +150,6 @@ Fixed species
 
 ### Subroutines ---------------------------------------
 
-SUBROUTINE Flux ( RR, P_VAR, D_VAR )
 SUBROUTINE Jac_SP ( V, F, RCT, JVS )
 SUBROUTINE Jac_SP_Vec ( JVS, UV, JUV )
 SUBROUTINE JacTR_SP_Vec ( JVS, UV, JTUV )
