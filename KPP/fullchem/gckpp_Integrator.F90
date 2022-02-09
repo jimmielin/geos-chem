@@ -1955,6 +1955,7 @@ END SUBROUTINE cWAXPY
         
         NRMV = 0
         S    = 1
+        RMV  = 0 ! reset RMV(:) to 0
 
         ! If all species will be deactivated, just to 1st order approx
         if (maxval(P) .lt. threshold .and. maxval(L) .lt. threshold .and. .not. keepActive) then
