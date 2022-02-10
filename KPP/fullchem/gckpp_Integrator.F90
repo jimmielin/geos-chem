@@ -932,6 +932,12 @@ Stage: DO istage = 1, ros_S
    END IF ! Err <= 1
 
    END DO UntilAccepted
+
+   ! hplin 2/9/22: do first order approx within TimeLoop
+   ! FirstOrderApprox: DO i=1,N
+   !    IF (.not. DO_SLV(i)) &
+   !         call autoreduce_1stOrder(i,Y(i),Prod(i),Loss(i),0.0,RSTATUS(Nhexit))
+   ! END DO FirstOrderApprox
    
    END DO TimeLoop
 
