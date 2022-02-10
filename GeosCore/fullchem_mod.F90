@@ -254,6 +254,7 @@ CONTAINS
        IF (State_Diag%Archive_KppSubsts   ) State_Diag%KppSubsts      = 0.0_f4
        IF (State_Diag%Archive_KppSmDecomps) State_Diag%KppSmDecomps   = 0.0_f4
        IF (State_Diag%Archive_KppAutoReducerNVAR) State_Diag%KppAutoReducerNVAR   = 0.0_f4
+       IF (State_Diag%Archive_KppcNONZERO)  State_Diag%KppcNONZERO    = 0.0_f4
        IF (State_Diag%Archive_KppStiffness) THEN
           State_Diag%KppStiffnessAll  = 0.0_f4
           State_Diag%KppStiffnessSlow = 0.0_f4
@@ -1131,6 +1132,11 @@ CONTAINS
           ! # of species in auto-reduced mechanism
           IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppAutoReducerNVAR ) THEN
              State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
+          ENDIF
+
+          ! # of nonzero elements in LU factorization of Jacobian, AR only
+          IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppcNONZERO ) THEN
+             State_Diag%KppcNONZERO(I,J,L) = cNONZERO
           ENDIF
        ENDIF
 
