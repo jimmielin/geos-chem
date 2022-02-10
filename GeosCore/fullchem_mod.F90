@@ -551,7 +551,7 @@ CONTAINS
     ! Keep species active functionality for auto-reduce
     ! only available for full-chemistry simulations currently
     !-----------------------------------------------------------------------
-    IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM .and. Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE ) THEN
+    IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM .and. Input_Opt%AUTOREDUCE_IS_KEEPACTIVE ) THEN
        ! keepSpcActive(ind_CH2I2)    = .true.
        ! keepSpcActive(ind_CH2ICl)   = .true.
        ! keepSpcActive(ind_CH2IBr)   = .true.

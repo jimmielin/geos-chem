@@ -305,7 +305,7 @@ Overhead O3 for FAST-JX :---
  => TOMS/SBUV O3        : F
 Gamma HO2               : 0.2
 Use auto-reduce solver? : F
-Keep strat. spc. active?: F
+Keep halogens active?   : F
 Auto-reduce threshold   : 100.0
 Prs. dep. threshold?    : F
 ------------------------+------------------------------------------------------
