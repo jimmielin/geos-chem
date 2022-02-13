@@ -2293,13 +2293,13 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%USE_AUTOREDUCE
 
-    ! Keep strat. spc. active?
-    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_KEEPSTRAT_ACTIVE', RC )
+    ! Keep halogen spc. active?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_KEEPACTIVE', RC )
     IF ( RC /= GC_SUCCESS ) THEN
        CALL GC_Error( ErrMsg, RC, ThisLoc )
        RETURN
     ENDIF
-    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
 
     ! Auto-reduce rate threshold
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_THRESHOLD', RC )
@@ -2408,8 +2408,8 @@ CONTAINS
                             Input_Opt%USE_AUTOREDUCE
        WRITE( 6, 120     ) 'Auto-reduce threshold       : ', &
                             Input_Opt%AUTOREDUCE_THRESHOLD
-       WRITE( 6, 100     ) 'Keep strat. spec. active?   : ', &
-                            Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE
+       WRITE( 6, 100     ) 'Keep halogen spec. active?  : ', &
+                            Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
        WRITE( 6, 100     ) 'Use prs. dependent threshold? ', &
                             Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
 

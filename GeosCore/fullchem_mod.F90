@@ -254,6 +254,7 @@ CONTAINS
        IF (State_Diag%Archive_KppSubsts   ) State_Diag%KppSubsts      = 0.0_f4
        IF (State_Diag%Archive_KppSmDecomps) State_Diag%KppSmDecomps   = 0.0_f4
        IF (State_Diag%Archive_KppAutoReducerNVAR) State_Diag%KppAutoReducerNVAR   = 0.0_f4
+       IF (State_Diag%Archive_KppcNONZERO)  State_Diag%KppcNONZERO    = 0.0_f4
        IF (State_Diag%Archive_KppStiffness) THEN
           State_Diag%KppStiffnessAll  = 0.0_f4
           State_Diag%KppStiffnessSlow = 0.0_f4
@@ -551,34 +552,60 @@ CONTAINS
     ! Keep species active functionality for auto-reduce
     ! only available for full-chemistry simulations currently
     !-----------------------------------------------------------------------
-    IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM .and. Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE ) THEN
-       keepSpcActive(ind_CH2I2)    = .true.
-       keepSpcActive(ind_CH2ICl)   = .true.
-       keepSpcActive(ind_CH2IBr)   = .true.
-       keepSpcActive(ind_CH3I)     = .true.
-       keepSpcActive(ind_CH3CCl3)  = .true.
-       keepSpcActive(ind_CHBr3)    = .true.
-       keepSpcActive(ind_CH2Cl2)   = .true.
-       keepSpcActive(ind_CHCl3)    = .true.
-       keepSpcActive(ind_CH2Br2)   = .true.
-       keepSpcActive(ind_HCFC123)  = .true.
-       keepSpcActive(ind_HCFC141b) = .true.
-       keepSpcActive(ind_HCFC142b) = .true.
-       keepSpcActive(ind_HCFC22)   = .true.
-       keepSpcActive(ind_CH3Br)    = .true.
-       keepSpcActive(ind_CH3Cl)    = .true.
-       keepSpcActive(ind_H1301)    = .true.
-       keepSpcActive(ind_H2402)    = .true.
-       keepSpcActive(ind_CCl4)     = .true.
-       keepSpcActive(ind_CFC11)    = .true.
-       keepSpcActive(ind_CFC12)    = .true.
-       keepSpcActive(ind_CFC113)   = .true.
-       keepSpcActive(ind_CFC114)   = .true.
-       keepSpcActive(ind_CFC115)   = .true.
-       keepSpcActive(ind_H1211)    = .true.
-       keepSpcActive(ind_N2O)      = .true.
-       keepSpcActive(ind_N)        = .true.
-       keepSpcActive(ind_OCS)      = .true.
+    IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM .and. Input_Opt%AUTOREDUCE_IS_KEEPACTIVE ) THEN
+       ! keepSpcActive(ind_CH2I2)    = .true.
+       ! keepSpcActive(ind_CH2ICl)   = .true.
+       ! keepSpcActive(ind_CH2IBr)   = .true.
+       ! keepSpcActive(ind_CH3I)     = .true.
+       ! keepSpcActive(ind_CH3CCl3)  = .true.
+       ! keepSpcActive(ind_CHBr3)    = .true.
+       ! keepSpcActive(ind_CH2Cl2)   = .true.
+       ! keepSpcActive(ind_CHCl3)    = .true.
+       ! keepSpcActive(ind_CH2Br2)   = .true.
+       ! keepSpcActive(ind_HCFC123)  = .true.
+       ! keepSpcActive(ind_HCFC141b) = .true.
+       ! keepSpcActive(ind_HCFC142b) = .true.
+       ! keepSpcActive(ind_HCFC22)   = .true.
+       ! keepSpcActive(ind_CH3Br)    = .true.
+       ! keepSpcActive(ind_CH3Cl)    = .true.
+       ! keepSpcActive(ind_H1301)    = .true.
+       ! keepSpcActive(ind_H2402)    = .true.
+       ! keepSpcActive(ind_CCl4)     = .true.
+       ! keepSpcActive(ind_CFC11)    = .true.
+       ! keepSpcActive(ind_CFC12)    = .true.
+       ! keepSpcActive(ind_CFC113)   = .true.
+       ! keepSpcActive(ind_CFC114)   = .true.
+       ! keepSpcActive(ind_CFC115)   = .true.
+       ! keepSpcActive(ind_H1211)    = .true.
+       ! keepSpcActive(ind_N2O)      = .true.
+       ! keepSpcActive(ind_N)        = .true.
+       ! keepSpcActive(ind_OCS)      = .true.
+
+       ! New halogens auto-reduce list hplin 01/27/22
+       ! based off Shen et al. 2020 GMD Table 1, lines 11, 12
+       keepSpcActive(ind_ClOO)       = .true.
+       keepSpcActive(ind_BrCl)       = .true.
+       keepSpcActive(ind_Br2 )       = .true.
+       keepSpcActive(ind_BrNO3)      = .true.
+       keepSpcActive(ind_HOBr)       = .true.
+       keepSpcActive(ind_HOCl)       = .true.
+       keepSpcActive(ind_ClNO3)      = .true.
+       keepSpcActive(ind_Cl  )       = .true.
+       keepSpcActive(ind_HBr )       = .true.
+       keepSpcActive(ind_ClO )       = .true.
+       keepSpcActive(ind_HCl )       = .true.
+       keepSpcActive(ind_I2O2)       = .true.
+       keepSpcActive(ind_BrNO2)      = .true.
+       keepSpcActive(ind_Cl2O2)      = .true.
+       keepSpcActive(ind_IONO)       = .true.
+       keepSpcActive(ind_OClO)       = .true.
+       keepSpcActive(ind_HOI)        = .true.
+       keepSpcActive(ind_IONO2)      = .true.
+       keepSpcActive(ind_Cl2)        = .true.
+       keepSpcActive(ind_I)          = .true.
+       keepSpcActive(ind_IO)         = .true.
+       keepSpcActive(ind_BrO)        = .true.
+       keepSpcActive(ind_Br)         = .true.
     ENDIF
 
     !-----------------------------------------------------------------------
@@ -633,13 +660,17 @@ CONTAINS
 
        ! For auto-reduce mechanism (hplin, 12/8/21)
        ! Control keepActive functionality (avoid else to avoid branching)
-       IF ( State_Met%InStratosphere(I,J,L) ) THEN
-          keepActive = .true.
-       ENDIF
+       ! IF ( State_Met%InStratosphere(I,J,L) ) THEN
+       !    keepActive = .true.
+       ! ENDIF
 
-       IF ( .not. State_Met%InStratosphere(I,J,L) ) THEN
-          keepActive = .false.
-       ENDIF
+       ! IF ( .not. State_Met%InStratosphere(I,J,L) ) THEN
+       !    keepActive = .false.
+       ! ENDIF
+
+       ! Now force keepActive everywhere in trop, strat. according to discussions
+       ! 2/9/22, hplin
+       keepActive = .true.
 
        ! Start measuring KPP-related routine timing for this grid box
        IF ( State_Diag%Archive_KppTime ) THEN
@@ -1101,6 +1132,11 @@ CONTAINS
           ! # of species in auto-reduced mechanism
           IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppAutoReducerNVAR ) THEN
              State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
+          ENDIF
+
+          ! # of nonzero elements in LU factorization of Jacobian, AR only
+          IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppcNONZERO ) THEN
+             State_Diag%KppcNONZERO(I,J,L) = cNONZERO
           ENDIF
        ENDIF
 

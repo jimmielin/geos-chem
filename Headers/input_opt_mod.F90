@@ -193,7 +193,7 @@ MODULE Input_Opt_Mod
      LOGICAL                     :: USE_O3_FROM_MET
      LOGICAL                     :: USE_TOMS_O3
      LOGICAL                     :: USE_AUTOREDUCE
-     LOGICAL                     :: AUTOREDUCE_IS_KEEPSTRAT_ACTIVE
+     LOGICAL                     :: AUTOREDUCE_IS_KEEPACTIVE
      LOGICAL                     :: AUTOREDUCE_IS_PRS_THRESHOLD
      REAL(fp)                    :: AUTOREDUCE_THRESHOLD
 #ifdef MODEL_GEOS
@@ -714,7 +714,7 @@ CONTAINS
     Input_Opt%USE_TOMS_O3            = .FALSE.
     Input_Opt%USE_AUTOREDUCE         = .FALSE.
     Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD = .FALSE.
-    Input_Opt%AUTOREDUCE_IS_KEEPSTRAT_ACTIVE = .FALSE.
+    Input_Opt%AUTOREDUCE_IS_KEEPACTIVE = .FALSE.
     Input_Opt%AUTOREDUCE_THRESHOLD   = 1e+2_fp
 
     !----------------------------------------

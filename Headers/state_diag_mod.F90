@@ -618,6 +618,9 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: KppStiffnessFast(:,:,:)      ! Stiffness ratio, fast species only (AR only)
      REAL(f4),           POINTER :: KppStiffnessSlow(:,:,:)      ! Stiffness ratio, slow species only (AR only)
 
+     REAL(f4),           POINTER :: KppcNONZERO(:,:,:)
+     LOGICAL                     :: Archive_KppcNONZERO
+
      LOGICAL                     :: Archive_KppDiags
 
      !%%%%% Chemistry metrics (e.g. mean OH, MCF lifetime, CH4 lifetime) %%%%%
@@ -1646,6 +1649,9 @@ CONTAINS
 
     State_Diag%KppAutoReducerNVAR                  => NULL()
     State_Diag%Archive_KppAutoReducerNVAR          = .FALSE.
+
+    State_Diag%KppcNONZERO                         => NULL()
+    State_Diag%Archive_KppcNONZERO                 = .FALSE.
 
     ! State_Diag%KppLifetime                         => NULL()
     State_Diag%KppStiffnessAll                     => NULL()
@@ -4816,6 +4822,28 @@ CONTAINS
        ENDIF
 
        !-------------------------------------------------------------------
+       ! AR only -- Number of nonzero entries in LU decomp (cNONZERO)
+       !-------------------------------------------------------------------
+       diagID = 'KppcNONZERO'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppcNONZERO,                         &
+            archiveData    = State_Diag%Archive_KppcNONZERO,                 &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
        ! CPU time spent in grid box for KPP
        !-------------------------------------------------------------------
        diagID = 'KppTime'
@@ -5040,6 +5068,8 @@ CONTAINS
                 diagID = 'KppStiffnessFast'
              CASE( 37 )
                 diagID = 'KppStiffnessSlow'  ! hplin 12/19/21: check if Kpp only appropriate for full-chem?
+             CASE( 38 )
+                diagID = 'KppcNONZERO'
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -8925,6 +8955,7 @@ CONTAINS
                                     State_Diag%Archive_KppSubsts          .or. &
                                     State_Diag%Archive_KppSmDecomps       .or. &
                                     State_Diag%Archive_KppAutoReducerNVAR .or. &
+                                    State_Diag%Archive_KppcNONZERO        .or. &
                                     State_Diag%Archive_KppTime            .or. &
                                     State_Diag%Archive_KppStiffness       .or. &
                                     State_Diag%Archive_KppDiags             )
@@ -10154,6 +10185,11 @@ CONTAINS
 
     CALL Finalize( diagId   = 'KppAutoReducerNVAR',                          &
                    Ptr2Data = State_Diag%KppAutoReducerNVAR,                 &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppcNONZERO',                                 &
+                   Ptr2Data = State_Diag%KppcNONZERO,                        &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
@@ -11640,6 +11676,11 @@ CONTAINS
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPAUTOREDUCERNVAR' ) THEN
        IF ( isDesc    ) Desc  = 'Number of species in auto-reduced mechanism'
+       IF ( isUnits   ) Units = 'count'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPCNONZERO' ) THEN
+       IF ( isDesc    ) Desc  = 'Number of nonzero elements in LU decomposition AR only'
        IF ( isUnits   ) Units = 'count'
        IF ( isRank    ) Rank  =  3
 
