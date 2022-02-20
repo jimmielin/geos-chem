@@ -606,6 +606,8 @@ CONTAINS
        keepSpcActive(ind_IO)         = .true.
        keepSpcActive(ind_BrO)        = .true.
        keepSpcActive(ind_Br)         = .true.
+
+       keepSpcActive(ind_ClNO2)      = .true.
     ENDIF
 
     !-----------------------------------------------------------------------
@@ -1042,6 +1044,9 @@ CONTAINS
        ! Trial and error has shown that a [0.1, 0.2] range for relaxation is best
        ! IF ( ( State_Met%SUNCOSmid(I,J) > -0.2e+0_fp .and. State_Met%SUNCOSmid(I,J) < -0.1e+0_fp ) .or. &
        !      ( State_Met%SUNCOSmid(I,J) >  0.1e+0_fp .and. State_Met%SUNCOSmid(I,J) <  0.2e+0_fp ) ) THEN
+       !    RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
+       ! ENDIF
+       ! IF ( ( State_Met%SUNCOSmid(I,J) > -0.1e+0_fp .and. State_Met%SUNCOSmid(I,J) <  0.1e+0_fp ) ) THEN
        !    RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
        ! ENDIF
 
