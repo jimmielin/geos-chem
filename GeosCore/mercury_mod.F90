@@ -368,7 +368,7 @@ CONTAINS
     REAL(dp)               :: RCNTRL     (                  20               )
     REAL(dp)               :: RSTATE     (                  20               )
 
-    REAL(dp)               :: Vloc(NVAR), Aout(NREACT)
+    REAL(dp)               :: P_VAR(NVAR), D_VAR(NVAR), Aout(NREACT)
 
     ! Relative Humidities (to be passed to FAST_JX)
     REAL(fp),  SAVE     :: RH(5)   = (/0e+0_fp,0.5e+0_fp, &
@@ -665,7 +665,7 @@ CONTAINS
     !$OMP PRIVATE  ( I,        J,        L,       N                         )&
     !$OMP PRIVATE  ( IERR,     RCNTRL,   START,   FINISH, ISTATUS           )&
     !$OMP PRIVATE  ( RSTATE,   SpcID,    KppID,   F,      P                 )&
-    !$OMP PRIVATE  ( Vloc,     Aout,     NN                                 )&
+    !$OMP PRIVATE  ( P_VAR,    D_VAR,    Aout,    NN                        )&
     !$OMP REDUCTION( +:ITIM                                                 )&
     !$OMP REDUCTION( +:RTIM                                                 )&
     !$OMP REDUCTION( +:TOTSTEPS                                             )&
@@ -797,7 +797,7 @@ CONTAINS
 
        ! Update the array of rate constants
        CALL Update_RCONST( )
-       CALL Fun ( VAR, FIX, RCONST, Vloc, Aout=Aout )
+       CALL Fun_SPLIT ( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
 !>>       if (I .eq. 2 .and. J .eq. 2 .and. L .eq. 3) then
 !>>          DO N=1,NREACT
 !>>             write(*,*) '<<>>R',N, RCONST(N), Aout(N)
@@ -807,13 +807,13 @@ CONTAINS
 
        ! Archive KPP reaction rates
        IF ( State_Diag%Archive_RxnRate ) THEN
-          CALL Fun ( VAR, FIX, RCONST, Vloc, Aout=Aout )
+          CALL Fun_SPLIT ( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
 #if !defined( MODEL_GEOS )
           DO N = 1, NREACT
              State_Diag%RxnRate(I,J,L,N) = Aout(N)
 #else
           DO N = 1, Input_Opt%NN_RxnRates
-             State_Diag%RxnRate(I,J,L,N) = RONST(N)!Aout(Input_Opt%RxnRates_IDs(N))
+             State_Diag%RxnRate(I,J,L,N) = RCONST(N)!Aout(Input_Opt%RxnRates_IDs(N))
 #endif
           ENDDO
        ENDIF
