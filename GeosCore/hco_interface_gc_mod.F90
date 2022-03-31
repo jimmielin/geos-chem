@@ -1883,7 +1883,7 @@ CONTAINS
 ! LOCAL VARIABLES:
 !
     ! Pointers
-    REAL(hp), POINTER  :: Trgt3D(:,:,:) => NULL()
+    REAL(hp), POINTER  :: Trgt3D(:,:,:)
 
     ! SAVEd scalars
     LOGICAL, SAVE      :: FIRST = .TRUE.
@@ -1902,6 +1902,7 @@ CONTAINS
     ! Initialize
     RC       = GC_SUCCESS
     HMRC     = HCO_SUCCESS
+    Trgt3d   => NULL()
     ErrMsg   = ''
     ThisLoc  = &
        ' -> at ExtState_SetFields (in module GeosCore/hco_interface_gc_mod.F90)'
@@ -2867,7 +2868,8 @@ CONTAINS
 #endif
 
     ! Not first call any more
-    FIRST = .FALSE.
+    FIRST  = .FALSE.
+    Trgt3D => NULL()
 
     ! Leave with success
     RC = GC_SUCCESS
@@ -3678,7 +3680,7 @@ CONTAINS
     IF ( Input_Opt%ITS_A_FULLCHEM_SIM     .or.                               &
          Input_Opt%ITS_AN_AEROSOL_SIM     .or.                               &
          Input_Opt%ITS_A_CO2_SIM          .or.                               &
-         Input_OPt%ITS_A_CH4_SIM          .or.                               &
+         Input_Opt%ITS_A_CH4_SIM          .or.                               &
          Input_Opt%ITS_A_MERCURY_SIM      .or.                               &
          Input_Opt%ITS_A_POPS_SIM         .or.                               &
          Input_Opt%ITS_A_RnPbBe_SIM       .or.                               &
@@ -4226,6 +4228,85 @@ CONTAINS
     ENDIF
 
     !-----------------------------------------------------------------------
+    ! Input data for CH4 simulations only
+    !
+    ! If we have turned on options in the CH4 MENU of input.geos, then we
+    ! also need to toggle switches so that HEMCO reads the appropriate data.
+    !-----------------------------------------------------------------------
+    IF ( Input_Opt%ITS_A_CH4_SIM ) THEN
+
+       IF ( Input_Opt%AnalyticalInv ) THEN
+          CALL GetExtOpt( HcoConfig, -999, 'AnalyticalInv', &
+                          OptValBool=LTMP, FOUND=FOUND,  RC=HMRC )
+
+          IF ( HMRC /= HCO_SUCCESS ) THEN
+             RC     = HMRC
+             ErrMsg = 'Error encountered in "GetExtOpt( AnalyticalInv )"!'
+             CALL GC_Error( ErrMsg, RC, ThisLoc, Instr )
+             RETURN
+          ENDIF
+          IF ( .not. FOUND ) THEN
+             ErrMsg = 'AnalyticalInv not found in HEMCO_Config.rc file!'
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             RETURN
+          ENDIF
+          IF ( .not. LTMP ) THEN
+             ErrMsg = 'AnalyticalInv is set to false in HEMCO_Config.rc ' // &
+                  'but should be set to true for this simulation.'
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             RETURN
+          ENDIF
+       ENDIF
+
+       IF ( Input_Opt%UseEmisSF ) THEN
+          CALL GetExtOpt( HcoConfig, -999, 'Emis_ScaleFactor', &
+                          OptValBool=LTMP, FOUND=FOUND,  RC=HMRC )
+
+          IF ( HMRC /= HCO_SUCCESS ) THEN
+             RC     = HMRC
+             ErrMsg = 'Error encountered in "GetExtOpt( Emis_ScaleFactor )"!'
+             CALL GC_Error( ErrMsg, RC, ThisLoc, Instr )
+             RETURN
+          ENDIF
+          IF ( .not. FOUND ) THEN
+             ErrMsg = 'Emis_ScaleFactor not found in HEMCO_Config.rc file!'
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             RETURN
+          ENDIF
+          IF ( .not. LTMP ) THEN
+             ErrMsg = 'Emis_ScaleFactor is set to false in HEMCO_Config.rc '// &
+                  'but should be set to true for this simulation.'
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             RETURN
+          ENDIF
+       ENDIF
+
+       IF ( Input_Opt%UseOHSF ) THEN
+          CALL GetExtOpt( HcoConfig, -999, 'OH_ScaleFactor',           &
+                          OptValBool=LTMP, FOUND=FOUND,  RC=HMRC )
+
+          IF ( HMRC /= HCO_SUCCESS ) THEN
+             RC     = HMRC
+             ErrMsg = 'Error encountered in "GetExtOpt( OH_ScaleFactor )"!'
+             CALL GC_Error( ErrMsg, RC, ThisLoc, Instr )
+             RETURN
+          ENDIF
+          IF ( .not. FOUND ) THEN
+             ErrMsg = 'OH_ScaleFactor not found in HEMCO_Config.rc file!'
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             RETURN
+          ENDIF
+          IF ( .not. LTMP ) THEN
+             ErrMsg = 'OH_ScaleFactor is set to false in HEMCO_Config.rc ' // &
+                  'but should be set to true for this simulation.'
+             CALL GC_Error( ErrMsg, RC, ThisLoc )
+             RETURN
+          ENDIF
+       ENDIF
+
+    ENDIF
+
+    !-----------------------------------------------------------------------
     ! RRTMG input data
     !
     ! If we have turned on the RRTMG simulation in the
@@ -4647,7 +4728,6 @@ CONTAINS
     USE HCO_State_GC_Mod,     ONLY : ExtState
     USE HCO_State_GC_Mod,     ONLY : HcoState
     USE Input_Opt_Mod,        ONLY : OptInput
-    USE Mercury_Mod,          ONLY : HG_Emis
     USE PhysConstants
     USE Species_Mod,          ONLY : Species
     USE State_Chm_Mod,        ONLY : ChmState
@@ -4832,15 +4912,16 @@ CONTAINS
       ! Check if there is emissions or deposition for this species
       CALL InquireHco ( N, Emis=EmisSpec, Dep=DepSpec )
 
-      ! If there is emissions for this species, it must be loaded into memory first.
-      ! This is achieved by attempting to retrieve a grid box while NOT in a parallel
-      ! loop. Failure to load this will result in severe performance issues!! (hplin, 9/27/20)
+      ! If there is emissions for this species, it must be loaded into
+      ! memory first.   This is achieved by attempting to retrieve a
+      ! grid box while NOT in a parallel loop. Failure to load this will
+      ! result in severe performance issues!! (hplin, 9/27/20)
       IF ( EmisSpec ) THEN
-          CALL LoadHcoValEmis ( Input_Opt, State_Grid, NA )
+         CALL LoadHcoValEmis ( Input_Opt, State_Grid, NA )
       ENDIF
 
       IF ( DepSpec ) THEN
-          CALL LoadHcoValDep ( Input_Opt, State_Grid, NA )
+         CALL LoadHcoValDep ( Input_Opt, State_Grid, NA )
       ENDIF
 
       !$OMP PARALLEL DO                                                        &
@@ -4873,21 +4954,13 @@ CONTAINS
            !%%% NOTE: MAYBE THIS CAN BE REMOVED SOON (bmy, 5/18/19)%%%
            eflx(I,J,NA) = CH4_EMIS(I,J,NA)
 
-        ELSE IF ( Input_Opt%ITS_A_MERCURY_SIM ) THEN
-
-           ! HG emissions become stored in HG_EMIS in mercury_mod.F90.
-           ! This is a workaround to ensure backwards compatibility.
-           ! Units are already in kg/m2/s. (ckeller, 10/21/2014)
-           !
-           !%%% NOTE: MAYBE THIS CAN BE REMOVED SOON (bmy, 5/18/19)%%%
-           eflx(I,J,NA) = HG_EMIS(I,J,NA)
-
         ELSE IF ( EmisSpec ) THEN  ! Are there emissions for these species?
 
            ! Compute emissions for all other simulation
            tmpFlx = 0.0_fp
            DO L = 1, topMix
-              CALL GetHcoValEmis( Input_Opt, State_Grid, NA, I, J, L, found, emis )
+              CALL GetHcoValEmis( Input_Opt, State_Grid, NA,    I,           &
+                                  J,         L,          found, emis        )
               IF ( .NOT. found ) EXIT
               tmpFlx = tmpFlx + emis
            ENDDO
@@ -5068,12 +5141,12 @@ CONTAINS
     !$OMP END PARALLEL DO
 
     !### Uncomment for debug output
-    ! WRITE( 6, '(a)' ) 'eflx and dflx values HEMCO [kg/m2/s]'
-    ! DO NA = 1, State_Chm%nAdvect
+    !WRITE( 6, '(a)' ) 'eflx and dflx values HEMCO [kg/m2/s]'
+    !DO NA = 1, State_Chm%nAdvect
     !   WRITE(6,*) 'eflx TRACER ', NA, ': ', SUM(eflx(:,:,NA))
     !   WRITE(6,*) 'dflx TRACER ', NA, ': ', SUM(dflx(:,:,NA))
     !   WRITE(6,*) 'sflx TRACER ', NA, ': ', SUM(State_Chm%SurfaceFlux(:,:,NA))
-    ! ENDDO
+    !ENDDO
 
     !=======================================================================
     ! DIAGNOSTICS: Compute drydep flux loss due to mixing [molec/cm2/s]

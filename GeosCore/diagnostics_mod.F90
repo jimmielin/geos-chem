@@ -1068,7 +1068,12 @@ CONTAINS
              IF ( before ) THEN
                 colMass(I,J,N,1) = colSum
              ELSE
+#ifdef MODEL_GEOS
+                diagFull(I,J,S) = ( colSum - colMass(I,J,N,1) ) / timeStep &
+                                / State_Grid%AREA_M2(I,J)
+#else
                 diagFull(I,J,S) = ( colSum - colMass(I,J,N,1) ) / timeStep
+#endif
              ENDIF
           ENDDO
        ENDIF
@@ -1110,7 +1115,12 @@ CONTAINS
              IF ( before ) THEN
                 colMass(I,J,N,2) = colSum
              ELSE
+#ifdef MODEL_GEOS
+                diagTrop(I,J,S) = ( colSum - colMass(I,J,N,2) ) / timeStep &
+                                / State_Grid%AREA_M2(I,J)
+#else
                 diagTrop(I,J,S) = ( colSum - colMass(I,J,N,2) ) / timeStep
+#endif
              ENDIF
           ENDDO
        ENDIF
@@ -1152,7 +1162,12 @@ CONTAINS
              IF ( before ) THEN
                 colMass(I,J,N,3) = colSum
              ELSE
+#ifdef MODEL_GEOS
+                diagPBL(I,J,S) = ( colSum - colMass(I,J,N,3) ) / timeStep &
+                               / State_Grid%AREA_M2(I,J)
+#else
                 diagPBL(I,J,S) = ( colSum - colMass(I,J,N,3) ) / timeStep
+#endif
              ENDIF
           ENDDO
        ENDIF

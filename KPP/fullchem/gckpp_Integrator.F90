@@ -408,8 +408,6 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
        Autoreduce = .false.
 !       PRINT *, 'Auto-reduction Threshold < 0. Defaulting to ', Redux_Threshold
     ENDIF
-! Reset rNVAR for the purpose of tracking the diagnostic
-   rNVAR = NVAR
 !~~~>  CALL Auto-reducing Rosenbrock method
     IF ( Autoreduce ) &
          CALL ros_cIntegrator(Y, Tstart, Tend, Texit,   &
@@ -740,6 +738,7 @@ Stage: DO istage = 1, ros_S
 !~~~>  Local parameters
    REAL(kind=dp), PARAMETER :: ZERO = 0.0_dp, ONE  = 1.0_dp
    REAL(kind=dp), PARAMETER :: DeltaMin = 1.0E-5_dp
+   INTEGER :: SPC
 !~~~>  Locally called functions
 !    REAL(kind=dp) WLAMCH
 !    EXTERNAL WLAMCH
@@ -800,7 +799,9 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
          IERR = 1 ! Success
          return
       endif
+      if (IERR .eq. -99) return
    endif
+
 !~~~>  Compute the function derivative with respect to T
    IF (.NOT.Autonomous) THEN
       CALL ros_FunTimeDerivative ( T, Roundoff, Y, &
@@ -932,12 +933,6 @@ Stage: DO istage = 1, ros_S
    END IF ! Err <= 1
 
    END DO UntilAccepted
-
-   ! hplin 2/9/22: do first order approx within TimeLoop
-   ! FirstOrderApprox: DO i=1,N
-   !    IF (.not. DO_SLV(i)) &
-   !         call autoreduce_1stOrder(i,Y(i),Prod(i),Loss(i),0.0,RSTATUS(Nhexit))
-   ! END DO FirstOrderApprox
    
    END DO TimeLoop
 
@@ -947,7 +942,7 @@ Stage: DO istage = 1, ros_S
    !    but the structure doesn't exist. Maybe worth considering 
    !    for efficiency purposes.
    DO i=1,N
-      IF (.not. DO_FUN(i)) &
+      IF (.not. DO_SLV(i)) &
            call autoreduce_1stOrder(i,Y(i),Prd0(i),Los0(i),Tstart,Tend)
    ENDDO
 
@@ -1934,7 +1929,7 @@ END SUBROUTINE cWAXPY
         USE gckpp_JacobianSP
 
         REAL(dp), INTENT(IN) :: P(NVAR), L(NVAR), threshold
-        INTEGER              :: iSPC_MAP(NVAR)
+!        INTEGER              :: iSPC_MAP(NVAR)
         INTEGER              :: i, ii, iii, idx, nrmv, s
         INTEGER              :: IERR
         LOGICAL              :: SKIP
@@ -1956,8 +1951,9 @@ END SUBROUTINE cWAXPY
            if (abs(L(i)).lt.threshold .and. abs(P(i)).lt.threshold .and. .not. SKIP) then ! per Shen et al., 2020
 !           if (abs(dcdt(i)).le.threshold) then ! per Santillana et al., 2010)
               NRMV=NRMV+1
+              RMV(NRMV) = i
               DO_SLV(i) = .false.
-              DO_FUN(i) = .false.
+              !DO_FUN(i) = .false.
               cycle
            endif
            SPC_MAP(S)  = i
@@ -1966,12 +1962,19 @@ END SUBROUTINE cWAXPY
         ENDDO
         rNVAR    = NVAR-NRMV ! Number of active species in the reduced mechanism
 
+        ! Problem size cut-off. If problem is greater than some fraction of the
+        ! full, just solve the full (via error value) -- MSL
+        ! if (dble(rNVAR)/dble(NVAR) .ge. 1.1) then ! Set to 1.1 to deactive it. The results can't be > 1
+        !    IERR = -99
+        !    return
+        ! endif
+
         II  = 1
         III = 1
         idx = 0
         DO i = 1,LU_NONZERO
            IF ((DO_SLV(LU_IROW(i))).and.(DO_SLV(LU_ICOL(i)))) THEN
-              idx=idx+1
+              idx=idx+1 ! counter for the number of non-zero elements in the reduced Jacobian
               cLU_IROW(idx) = iSPC_MAP(LU_IROW(i))
               cLU_ICOL(idx) = iSPC_MAP(LU_ICOL(i))
               JVS_MAP(idx)  = i
@@ -2000,8 +2003,6 @@ END SUBROUTINE cWAXPY
       END SUBROUTINE REDUCE
       
 END MODULE gckpp_Integrator
-
-
 
 ! End of INTEGRATE function
 ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

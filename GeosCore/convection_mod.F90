@@ -304,7 +304,11 @@ CONTAINS
           DO S = 1, State_Diag%Map_WetLossConv%nSlots
              NW = State_Diag%Map_WetLossConv%slot2id(S)
              DO L = 1, State_Grid%NZ
+#ifdef MODEL_GEOS
+                State_Diag%WetLossConv(I,J,L,S) = Diag38(L,NW) / AREA_M2
+#else
                 State_Diag%WetLossConv(I,J,L,S) = Diag38(L,NW)
+#endif
              ENDDO
           ENDDO
        ENDIF
@@ -722,7 +726,6 @@ CONTAINS
              ! level [kg/kg]
              !-----------------------------------------------------
              QC = Q(CLDBASE,IC)
-
           ENDIF
 
           !==================================================================
@@ -851,7 +854,6 @@ CONTAINS
 
                 ENDIF
                 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
                 ! Update QC taking entrainment into account [kg/kg]
                 ! Prevent div by zero condition
                 IF ( ENTRN >= 0e+0_fp .and. CMOUT > 0e+0_fp ) THEN
