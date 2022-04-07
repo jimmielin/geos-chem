@@ -585,47 +585,52 @@ CONTAINS
     ! Keep species active functionality for auto-reduce
     ! only available for full-chemistry simulations currently
     !-----------------------------------------------------------------------
-    IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM .and. Input_Opt%AUTOREDUCE_IS_KEEPACTIVE ) THEN
-       ! New halogens auto-reduce list hplin 01/27/22, 03/02/22
-       ! based off Shen et al. 2020 GMD Table 1, lines 10, 11, 12
-       keepSpcActive(ind_AERI )      = .true.  ! Iodine on aerosol
-       keepSpcActive(ind_ISALA)      = .true.
-       keepSpcActive(ind_ISALC)      = .true.
-       keepSpcActive(ind_I2O4 )      = .true.
-       keepSpcActive(ind_I2O3 )      = .true.
-       keepSpcActive(ind_IBr  )      = .true.
-       keepSpcActive(ind_INO  )      = .true.
-       keepSpcActive(ind_HI   )      = .true.
-       keepSpcActive(ind_ICl  )      = .true.
-       keepSpcActive(ind_ClNO2)      = .true.
-       keepSpcActive(ind_BrSALA)     = .true.
-       keepSpcActive(ind_BrSALC)     = .true.
-       keepSpcActive(ind_I2   )      = .true.
+    IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM ) THEN
+       ! For new sulfur chemistry in 13.4.0
+       keepSpcActive(ind_SO4s) = .true.
 
-       keepSpcActive(ind_ClOO)       = .true.
-       keepSpcActive(ind_BrCl)       = .true.
-       keepSpcActive(ind_Br2 )       = .true.
-       keepSpcActive(ind_BrNO3)      = .true.
-       keepSpcActive(ind_HOBr)       = .true.
-       keepSpcActive(ind_HOCl)       = .true.
-       keepSpcActive(ind_ClNO3)      = .true.
-       keepSpcActive(ind_Cl  )       = .true.
-       keepSpcActive(ind_HBr )       = .true.
-       keepSpcActive(ind_ClO )       = .true.
-       keepSpcActive(ind_HCl )       = .true.
+       IF ( Input_Opt%AUTOREDUCE_IS_KEEPACTIVE ) THEN
+           ! New halogens auto-reduce list hplin 01/27/22, 03/02/22
+           ! based off Shen et al. 2020 GMD Table 1, lines 10, 11, 12
+           keepSpcActive(ind_AERI )      = .true.  ! Iodine on aerosol
+           keepSpcActive(ind_ISALA)      = .true.
+           keepSpcActive(ind_ISALC)      = .true.
+           keepSpcActive(ind_I2O4 )      = .true.
+           keepSpcActive(ind_I2O3 )      = .true.
+           keepSpcActive(ind_IBr  )      = .true.
+           keepSpcActive(ind_INO  )      = .true.
+           keepSpcActive(ind_HI   )      = .true.
+           keepSpcActive(ind_ICl  )      = .true.
+           keepSpcActive(ind_ClNO2)      = .true.
+           keepSpcActive(ind_BrSALA)     = .true.
+           keepSpcActive(ind_BrSALC)     = .true.
+           keepSpcActive(ind_I2   )      = .true.
 
-       keepSpcActive(ind_I2O2)       = .true.
-       keepSpcActive(ind_BrNO2)      = .true.
-       keepSpcActive(ind_Cl2O2)      = .true.
-       keepSpcActive(ind_IONO)       = .true.
-       keepSpcActive(ind_OClO)       = .true.
-       keepSpcActive(ind_HOI)        = .true.
-       keepSpcActive(ind_IONO2)      = .true.
-       keepSpcActive(ind_Cl2)        = .true.
-       keepSpcActive(ind_I)          = .true.
-       keepSpcActive(ind_IO)         = .true.
-       keepSpcActive(ind_BrO)        = .true.
-       keepSpcActive(ind_Br)         = .true.
+           keepSpcActive(ind_ClOO)       = .true.
+           keepSpcActive(ind_BrCl)       = .true.
+           keepSpcActive(ind_Br2 )       = .true.
+           keepSpcActive(ind_BrNO3)      = .true.
+           keepSpcActive(ind_HOBr)       = .true.
+           keepSpcActive(ind_HOCl)       = .true.
+           keepSpcActive(ind_ClNO3)      = .true.
+           keepSpcActive(ind_Cl  )       = .true.
+           keepSpcActive(ind_HBr )       = .true.
+           keepSpcActive(ind_ClO )       = .true.
+           keepSpcActive(ind_HCl )       = .true.
+
+           keepSpcActive(ind_I2O2)       = .true.
+           keepSpcActive(ind_BrNO2)      = .true.
+           keepSpcActive(ind_Cl2O2)      = .true.
+           keepSpcActive(ind_IONO)       = .true.
+           keepSpcActive(ind_OClO)       = .true.
+           keepSpcActive(ind_HOI)        = .true.
+           keepSpcActive(ind_IONO2)      = .true.
+           keepSpcActive(ind_Cl2)        = .true.
+           keepSpcActive(ind_I)          = .true.
+           keepSpcActive(ind_IO)         = .true.
+           keepSpcActive(ind_BrO)        = .true.
+           keepSpcActive(ind_Br)         = .true.
+        ENDIF
     ENDIF
 
     !========================================================================
@@ -690,16 +695,6 @@ CONTAINS
        Thread    = OMP_GET_THREAD_NUM() + 1 ! OpenMP thread number
 #endif
 #endif
-
-       ! For auto-reduce mechanism (hplin, 12/8/21)
-       ! Control keepActive functionality (avoid else to avoid branching)
-       ! IF ( State_Met%InStratosphere(I,J,L) ) THEN
-       !    keepActive = .true.
-       ! ENDIF
-
-       ! IF ( .not. State_Met%InStratosphere(I,J,L) ) THEN
-       !    keepActive = .false.
-       ! ENDIF
 
        ! Now force keepActive everywhere in trop, strat. according to discussions
        ! 2/9/22, hplin
