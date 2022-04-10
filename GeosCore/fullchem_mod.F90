@@ -589,47 +589,60 @@ CONTAINS
        ! For new sulfur chemistry in 13.4.0
        keepSpcActive(ind_SO4s) = .true.
 
+       ! For aromatic chemistry in 13.4.0 (Bates et al., 2021)
+       ! stabilize NOx with a bad restart file hplin 4/8/22
+       keepSpcActive(ind_BENZO2) = .true.
+       keepSpcActive(ind_BENZO ) = .true.
+       keepSpcActive(ind_OH    ) = .true.
+
        IF ( Input_Opt%AUTOREDUCE_IS_KEEPACTIVE ) THEN
            ! New halogens auto-reduce list hplin 01/27/22, 03/02/22
            ! based off Shen et al. 2020 GMD Table 1, lines 10, 11, 12
            keepSpcActive(ind_AERI )      = .true.  ! Iodine on aerosol
+
+           keepSpcActive(ind_Br)         = .true.
+           keepSpcActive(ind_Br2 )       = .true.
+           keepSpcActive(ind_BrCl)       = .true.
+           keepSpcActive(ind_BrNO2)      = .true.
+           keepSpcActive(ind_BrNO3)      = .true.
+           keepSpcActive(ind_BrO)        = .true.
+           keepSpcActive(ind_BrSALA)     = .true.
+           keepSpcActive(ind_BrSALC)     = .true.
+           keepSpcActive(ind_HBr )       = .true.
+           keepSpcActive(ind_HOBr)       = .true.
+
+           keepSpcActive(ind_Cl  )       = .true.
+           keepSpcActive(ind_Cl2)        = .true.
+           keepSpcActive(ind_Cl2O2)      = .true.
+           keepSpcActive(ind_ClNO2)      = .true.
+           keepSpcActive(ind_ClNO3)      = .true.
+           keepSpcActive(ind_ClO )       = .true.
+           keepSpcActive(ind_ClOO)       = .true.
+           keepSpcActive(ind_OClO)       = .true.
+           keepSpcActive(ind_HCl )       = .true.
+           keepSpcActive(ind_HOCl)       = .true.
+
+           keepSpcActive(ind_I)          = .true.
+           keepSpcActive(ind_I2   )      = .true.
+           keepSpcActive(ind_IO)         = .true.
+           keepSpcActive(ind_I2O2)       = .true.
+           keepSpcActive(ind_HI   )      = .true.
            keepSpcActive(ind_ISALA)      = .true.
            keepSpcActive(ind_ISALC)      = .true.
            keepSpcActive(ind_I2O4 )      = .true.
            keepSpcActive(ind_I2O3 )      = .true.
-           keepSpcActive(ind_IBr  )      = .true.
            keepSpcActive(ind_INO  )      = .true.
-           keepSpcActive(ind_HI   )      = .true.
-           keepSpcActive(ind_ICl  )      = .true.
-           keepSpcActive(ind_ClNO2)      = .true.
-           keepSpcActive(ind_BrSALA)     = .true.
-           keepSpcActive(ind_BrSALC)     = .true.
-           keepSpcActive(ind_I2   )      = .true.
-
-           keepSpcActive(ind_ClOO)       = .true.
-           keepSpcActive(ind_BrCl)       = .true.
-           keepSpcActive(ind_Br2 )       = .true.
-           keepSpcActive(ind_BrNO3)      = .true.
-           keepSpcActive(ind_HOBr)       = .true.
-           keepSpcActive(ind_HOCl)       = .true.
-           keepSpcActive(ind_ClNO3)      = .true.
-           keepSpcActive(ind_Cl  )       = .true.
-           keepSpcActive(ind_HBr )       = .true.
-           keepSpcActive(ind_ClO )       = .true.
-           keepSpcActive(ind_HCl )       = .true.
-
-           keepSpcActive(ind_I2O2)       = .true.
-           keepSpcActive(ind_BrNO2)      = .true.
-           keepSpcActive(ind_Cl2O2)      = .true.
            keepSpcActive(ind_IONO)       = .true.
-           keepSpcActive(ind_OClO)       = .true.
-           keepSpcActive(ind_HOI)        = .true.
            keepSpcActive(ind_IONO2)      = .true.
-           keepSpcActive(ind_Cl2)        = .true.
-           keepSpcActive(ind_I)          = .true.
-           keepSpcActive(ind_IO)         = .true.
-           keepSpcActive(ind_BrO)        = .true.
-           keepSpcActive(ind_Br)         = .true.
+           keepSpcActive(ind_ICl  )      = .true.
+           keepSpcActive(ind_IBr  )      = .true.
+           keepSpcActive(ind_HOI)        = .true.
+
+           keepSpcActive(ind_SALACl)     = .true.
+           keepSpcActive(ind_SALCCl)     = .true.
+           keepSpcActive(ind_SALAAL)     = .true.
+           keepSpcActive(ind_SALCAL)     = .true.
+
         ENDIF
     ENDIF
 
