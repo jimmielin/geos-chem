@@ -787,6 +787,7 @@ Stage: DO istage = 1, ros_S
 !      Inline local parameters for AR.
    INTEGER :: II, III, idx, nrmv, s
    REAL(kind=dp), INTENT(IN) :: AR_thr_ratio
+   REAL(kind=dp) :: AR_thr
    INTEGER, INTENT(IN) :: AR_target_spc
 !~~~>  Initial preparations
    DO_SLV  = .true.
@@ -853,10 +854,11 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       iSPC_MAP = 0
       NRMV     = 0
       S        = 1
+      AR_thr   = threshold
 
       ! Target species?
       if(AR_target_spc .gt. 0) then
-          threshold = AR_thr_ratio * max(LossY(AR_target_spc), Prod(AR_target_spc))           ! Lin et al., 2022 in prep.
+          AR_thr = AR_thr_ratio * max(LossY(AR_target_spc), Prod(AR_target_spc))           ! Lin et al., 2022 in prep.
       endif
 
       ! Checks should be kept out of tight inner loops.
@@ -864,7 +866,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
         DO i=1,NVAR
           ! Short-circuiting using SKIP is very important here.
           if (.not. keepSpcActive(i) .and. &
-              abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+              abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
              NRMV=NRMV+1
              ! RMV(NRMV) = i ! not needed unless in append version.
              DO_SLV(i) = .false.
@@ -880,7 +882,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       IF (.not. keepActive) THEN
         DO i=1,NVAR
          ! Short-circuiting using SKIP is very important here.
-         if (abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+         if (abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
             NRMV=NRMV+1
             ! RMV(NRMV) = i ! not needed unless in append version.
             DO_SLV(i) = .false.
