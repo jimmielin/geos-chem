@@ -854,7 +854,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
          if (.not. keepSpcActive(i) .and. &
              abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
             NRMV=NRMV+1
-            RMV(NRMV) = i
+            ! RMV(NRMV) = i ! not needed unless in append version.
             DO_SLV(i) = .false.
             ! DO_FUN(i) = .false.
             cycle
@@ -870,7 +870,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
          ! Short-circuiting using SKIP is very important here.
          if (abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
             NRMV=NRMV+1
-            RMV(NRMV) = i
+            ! RMV(NRMV) = i ! not needed unless in append version.
             DO_SLV(i) = .false.
             ! DO_FUN(i) = .false.
             cycle
@@ -1229,6 +1229,7 @@ Stage: DO istage = 1, ros_S
    DO_FUN  = .true.
    DO_JVS  = .true.
    Reduced = .false.
+   RMV     = 0
 
    T = Tstart
    RSTATUS(Nhexit) = ZERO
@@ -1370,7 +1371,9 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       ! Scan prod/loss for condition change for append functionality.
       ! Note because this requires internal Prod/Loss update, yIntegrator will fall through
       ! here. (hplin, 4/10/22)
-      DO i=1,NVAR
+      ! RMV is filled at most to NRMV, so read to that. Note that NRMV is only here because
+      ! we inlined Reduce(), so this cannot be ported to ros_cIntegrator. (hplin, 4/12/22)
+      DO i=1,NRMV
          SPC = RMV(i)
          if (SPC .eq. 0) cycle ! Species is already appended
          if (abs(LossY(SPC)).gt.threshold .or. abs(Prod(SPC)).gt.threshold) then
