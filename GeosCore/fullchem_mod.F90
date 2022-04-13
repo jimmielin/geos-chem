@@ -559,6 +559,12 @@ CONTAINS
        ICNTRL(8) = 1
     ENDIF
 
+    ! Use append functionality?
+    ICNTRL(9) = 0
+    IF ( Input_Opt%AUTOREDUCE_IS_APPEND ) THEN
+       ICNTRL(9) = 1
+    ENDIF
+
     !=======================================================================
     ! %%%%% SOLVE CHEMISTRY -- This is the main KPP solver loop %%%%%
     !=======================================================================

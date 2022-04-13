@@ -113,9 +113,10 @@ Overhead O3 for FAST-JX :---
  => TOMS/SBUV O3        : F
 Gamma HO2               : 0.2
 Use auto-reduce solver? : F
-Keep halogens active?   : F
+Keep halogens active?   : T
 Auto-reduce threshold   : 100.0
-Prs. dep. threshold?    : F
+Prs. dep. threshold?    : T
+Append species?         : F
 ------------------------+------------------------------------------------------
 %%% PHOTOLYSIS MENU %%% :
 FAST-JX directory       : ${RUNDIR_DATA_ROOT}/CHEM_INPUTS/FAST_JX/v2021-10/

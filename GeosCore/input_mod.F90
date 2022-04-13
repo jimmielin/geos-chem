@@ -2323,6 +2323,14 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
 
+    ! Use append?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_APPEND', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_APPEND
+
     ! Separator line
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'separator 2', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2419,6 +2427,8 @@ CONTAINS
                             Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
        WRITE( 6, 100     ) 'Use prs. dependent threshold? ', &
                             Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
+       WRITE( 6, 100     ) 'Use append in auto-reduce?  :', &
+                            Input_Opt%AUTOREDUCE_IS_APPEND
 
        IF ( Input_Opt%USE_ONLINE_O3 ) THEN
           WRITE( 6, '(a)' ) ''

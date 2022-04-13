@@ -195,6 +195,7 @@ MODULE Input_Opt_Mod
      LOGICAL                     :: USE_AUTOREDUCE
      LOGICAL                     :: AUTOREDUCE_IS_KEEPACTIVE
      LOGICAL                     :: AUTOREDUCE_IS_PRS_THRESHOLD
+     LOGICAL                     :: AUTOREDUCE_IS_APPEND
      REAL(fp)                    :: AUTOREDUCE_THRESHOLD
 #ifdef MODEL_GEOS
      LOGICAL                     :: LGMIOZ
@@ -721,6 +722,7 @@ CONTAINS
     Input_Opt%USE_AUTOREDUCE         = .FALSE.
     Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD = .FALSE.
     Input_Opt%AUTOREDUCE_IS_KEEPACTIVE = .FALSE.
+    Input_Opt%AUTOREDUCE_IS_APPEND   = .FALSE.
     Input_Opt%AUTOREDUCE_THRESHOLD   = 1e+2_fp
 
     !----------------------------------------
