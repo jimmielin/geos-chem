@@ -97,6 +97,7 @@ CONTAINS
     USE ErrCode_Mod
     USE ERROR_MOD
     USE FAST_JX_MOD,              ONLY : PHOTRATE_ADJ, FAST_JX
+    USE FAST_JX_MOD,              ONLY : RXN_NO2                   ! hplin 4/13/22
     USE fullchem_HetStateFuncs,   ONLY : fullchem_SetStateHet
     USE fullchem_SulfurChemFuncs, ONLY : fullchem_ConvertAlkToEquiv
     USE fullchem_SulfurChemFuncs, ONLY : fullchem_ConvertEquivToAlk
@@ -593,13 +594,13 @@ CONTAINS
     !-----------------------------------------------------------------------
     IF ( FIRSTCHEM .and. Input_Opt%ITS_A_FULLCHEM_SIM ) THEN
        ! For new sulfur chemistry in 13.4.0
-       keepSpcActive(ind_SO4s) = .true.
+       ! keepSpcActive(ind_SO4s) = .true.
 
        ! For aromatic chemistry in 13.4.0 (Bates et al., 2021)
        ! stabilize NOx with a bad restart file hplin 4/8/22
-       keepSpcActive(ind_BENZO2) = .true.
-       keepSpcActive(ind_BENZO ) = .true.
-       keepSpcActive(ind_OH    ) = .true.
+       ! keepSpcActive(ind_BENZO2) = .true.
+       ! keepSpcActive(ind_BENZO ) = .true.
+       ! keepSpcActive(ind_OH    ) = .true.
 
        IF ( Input_Opt%AUTOREDUCE_IS_KEEPACTIVE ) THEN
            ! New halogens auto-reduce list hplin 01/27/22, 03/02/22
@@ -1189,17 +1190,17 @@ CONTAINS
           RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
        ENDIF
 
-       ! Testing only: Force all species near terminator
-       ! In the future this needs to be tweakable as an option (hplin, 12/14/21)
-       !
-       ! Trial and error has shown that a [0.1, 0.2] range for relaxation is best
-       ! IF ( ( State_Met%SUNCOSmid(I,J) > -0.2e+0_fp .and. State_Met%SUNCOSmid(I,J) < -0.1e+0_fp ) .or. &
-       !      ( State_Met%SUNCOSmid(I,J) >  0.1e+0_fp .and. State_Met%SUNCOSmid(I,J) <  0.2e+0_fp ) ) THEN
-       !    RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
-       ! ENDIF
-       ! IF ( ( State_Met%SUNCOSmid(I,J) > -0.1e+0_fp .and. State_Met%SUNCOSmid(I,J) <  0.1e+0_fp ) ) THEN
-       !    RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
-       ! ENDIF
+       ! Testing only: Dynamic threshold determination
+       ! Use JNO2 as night determination.
+       ! RXN_NO2: NO2 + hv --> NO  + O
+       ICNTRL(10) = ind_OH        ! Assume OH is daytime target species.
+       RCNTRL(10) = 0.001_dp
+       IF(ZPJ(L,RXN_NO2,I,J) .le. 0.05_fp) THEN
+          ICNTRL(10) = ind_NO2    ! NO2 is nighttime target species.
+          RCNTRL(10) = 0.01_dp
+       ENDIF
+       ! Dynamic threshold boundary ratio in RCNTRL(10)
+       ! From discussions 1e-2 might be ok for NO2, 1e-3 for OH
 
        !=====================================================================
        ! Integrate the box forwards
