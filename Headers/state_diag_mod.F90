@@ -633,6 +633,9 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: KppTime(:,:,:)
      LOGICAL                     :: Archive_KppTime
 
+     REAL(f4),           POINTER :: KppAutoReduceThres(:,:,:)
+     LOGICAL                     :: Archive_KppAutoReduceThres
+
      LOGICAL                     :: Archive_KppStiffness
      ! REAL(f4),           POINTER :: KppLifetime     (:,:,:)      ! Species lifetime, C/(P-L)
      REAL(f4),           POINTER :: KppStiffnessAll (:,:,:)      ! Stiffness ratio, all species
@@ -1718,6 +1721,9 @@ CONTAINS
 
     State_Diag%KppAutoReducerNVAR                  => NULL()
     State_Diag%Archive_KppAutoReducerNVAR          = .FALSE.
+
+    State_Diag%KppAutoReduceThres                  => NULL()
+    State_Diag%Archive_KppAutoReduceThres          = .FALSE.
 
     State_Diag%KppcNONZERO                         => NULL()
     State_Diag%Archive_KppcNONZERO                 = .FALSE.
@@ -4974,6 +4980,28 @@ CONTAINS
        ENDIF
 
        !-------------------------------------------------------------------
+       ! AR only -- Computed reduction threshold (molec cm-3 s-1)
+       !-------------------------------------------------------------------
+       diagID = 'KppAutoReduceThres'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppAutoReduceThres,                  &
+            archiveData    = State_Diag%Archive_KppAutoReduceThres,          &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
        ! AR only -- Number of nonzero entries in LU decomp (cNONZERO)
        !-------------------------------------------------------------------
        diagID = 'KppcNONZERO'
@@ -5224,6 +5252,8 @@ CONTAINS
                 diagID = 'KppcNONZERO'
              CASE( 39 )
                 diagID = 'NOxTau'
+             CASE( 40 )
+                diagID = 'KppAutoReduceThres'
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -9354,6 +9384,7 @@ CONTAINS
                                     State_Diag%Archive_KppSubsts          .or. &
                                     State_Diag%Archive_KppSmDecomps       .or. &
                                     State_Diag%Archive_KppAutoReducerNVAR .or. &
+                                    State_Diag%Archive_KppAutoReduceThres .or. &
                                     State_Diag%Archive_KppcNONZERO        .or. &
                                     State_Diag%Archive_KppTime            .or. &
                                     State_Diag%Archive_KppStiffness       .or. &
@@ -10614,6 +10645,11 @@ CONTAINS
 
     CALL Finalize( diagId   = 'KppAutoReducerNVAR',                          &
                    Ptr2Data = State_Diag%KppAutoReducerNVAR,                 &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppAutoReduceThres',                          &
+                   Ptr2Data = State_Diag%KppAutoReduceThres,                 &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
@@ -12080,6 +12116,11 @@ CONTAINS
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPAUTOREDUCERNVAR' ) THEN
        IF ( isDesc    ) Desc  = 'Number of species in auto-reduced mechanism'
        IF ( isUnits   ) Units = 'count'
+       IF ( isRank    ) Rank  =  3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPAUTOREDUCETHRES' ) THEN
+       IF ( isDesc    ) Desc  = 'Auto-reduction threshold'
+       IF ( isUnits   ) Units = 'molecules cm-3 s-1'
        IF ( isRank    ) Rank  =  3
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPCNONZERO' ) THEN

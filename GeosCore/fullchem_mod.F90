@@ -1291,6 +1291,11 @@ CONTAINS
              State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
           ENDIF
 
+          ! Computed threshold
+          IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppAutoReduceThres ) THEN
+             State_Diag%KppAutoReduceThres(I,J,L) = RSTATE(NARthr)
+          ENDIF
+
           ! # of nonzero elements in LU factorization of Jacobian, AR only
           IF ( Input_Opt%USE_AUTOREDUCE .and. State_Diag%Archive_KppcNONZERO ) THEN
              State_Diag%KppcNONZERO(I,J,L) = cNONZERO

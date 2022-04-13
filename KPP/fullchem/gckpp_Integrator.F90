@@ -62,7 +62,8 @@ MODULE gckpp_Integrator
 !~~~>  Statistics on the work performed by the Rosenbrock method
   INTEGER, PARAMETER :: Nfun=1, Njac=2, Nstp=3, Nacc=4, &
                         Nrej=5, Ndec=6, Nsol=7, Nsng=8, &
-                        Ntexit=1, Nhexit=2, Nhnew = 3
+                        Ntexit=1, Nhexit=2, Nhnew = 3,  &
+                        NARthr=4
 
 CONTAINS
 
@@ -197,6 +198,8 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
 !
 !    ICNTRL(8)  -> use auto-reduce solver? set threshold in RCNTRL(8)
 !    ICNTRL(9)  -> ... append slow species when auto-reducing?
+!    ICNTRL(10) -> choose a target species instead for determining threshold?
+!                  if yes, specify idx. then RCNTRL(8) is obsolete.
 !
 !    RCNTRL(1)  -> Hmin, lower bound for the integration step size
 !          It is strongly recommended to keep Hmin = ZERO
@@ -211,6 +214,7 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
 !         than the predicted value  (default=0.9)
 !
 !    RCNTRL(8)  -> threshold for auto-reduction (req. RCNTRL(8)) (default=100)
+!    RCNTRL(10) -> AR threshold ratio (default=0.01)
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 !
 !
@@ -241,6 +245,8 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
 !    RSTATUS(3)  -> Hnew, last predicted step (not yet taken)
 !                   For multiple restarts, use Hnew as Hstart 
 !                     in the subsequent run
+!    RSTATUS(10) -> ARthr, last auto-reduction threshold determined
+!                   only if AR is on (ICNTRL(8)) and key spc (ICNTRL(10))
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -279,7 +285,7 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
 
 !~~~>  Initialize statistics
    ISTATUS(1:8) = 0
-   RSTATUS(1:3) = ZERO
+   RSTATUS(1:4) = ZERO
 
 !~~~>  Autonomous or time dependent ODE. Default is time dependent.
    Autonomous = .NOT.(ICNTRL(1) == 0)
@@ -421,7 +427,11 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
        Redux_Threshold = RCNTRL(8)
     ELSEIF (RCNTRL(8) < ZERO) THEN
        Autoreduce = .false.
-!       PRINT *, 'Auto-reduction Threshold < 0. Defaulting to ', Redux_Threshold
+    ENDIF
+!~~~> Auto-reduction threshold ratio (only if ICNTRL(10) is not zero)
+    AR_thr_ratio = 0.001_dp
+    IF (RCNTRL(8) > ZERO) THEN
+       AR_thr_ratio = RCNTRL(10)
     ENDIF
 !~~~>  CALL Auto-reducing Rosenbrock method
     IF ( Autoreduce .and. .not. Autoreduce_Append ) THEN
@@ -859,6 +869,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       ! Target species?
       if(AR_target_spc .gt. 0) then
           AR_thr = AR_thr_ratio * max(LossY(AR_target_spc), Prod(AR_target_spc))           ! Lin et al., 2022 in prep.
+          RSTATUS(NARthr) = AR_thr
       endif
 
       ! Checks should be kept out of tight inner loops.
