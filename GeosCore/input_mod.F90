@@ -2448,9 +2448,9 @@ CONTAINS
        IF ( Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD ) THEN
          WRITE( 6, 100     ) 'Use target species threshold: ', &
                              Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD
-         WRITE( 6, 120     ) 'OH tuning factor: ', &
+         WRITE( 6, 130     ) 'OH tuning factor:             ', &
                              Input_Opt%AUTOREDUCE_TUNING_OH
-         WRITE( 6, 120     ) 'NO2 tuning factor: ', &
+         WRITE( 6, 130     ) 'NO2 tuning factor:            ', &
                              Input_Opt%AUTOREDUCE_TUNING_NO2
        ELSE
          WRITE( 6, 120     ) 'Absolute AR threshold     : ', &
@@ -2460,7 +2460,7 @@ CONTAINS
        ENDIF
        WRITE( 6, 100     ) 'Keep halogen spec. active?  : ', &
                             Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
-       WRITE( 6, 100     ) 'Use append in auto-reduce?  :', &
+       WRITE( 6, 100     ) 'Use append in auto-reduce?  : ', &
                             Input_Opt%AUTOREDUCE_IS_APPEND
 
        IF ( Input_Opt%USE_ONLINE_O3 ) THEN
@@ -2477,6 +2477,7 @@ CONTAINS
 100 FORMAT( A, L5  )
 110 FORMAT( A, F4.2 )
 120 FORMAT( A, F5.1 )
+130 FORMAT( A, ES7.1 )
 
   END SUBROUTINE READ_CHEMISTRY_MENU
 !EOC

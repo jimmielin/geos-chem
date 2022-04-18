@@ -310,7 +310,7 @@ Target spc. threshold?  : T
  => NO2 tuning factor   : 1e-4
  OR absolute threshold  : 100.0
  => Prs. dep. threshold?: T
-Keep halogens active?   : T
+Keep halogens active?   : F
 Append species?         : F
 ------------------------+------------------------------------------------------
 %%% PHOTOLYSIS MENU %%% :
