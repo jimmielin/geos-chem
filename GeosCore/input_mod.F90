@@ -2291,6 +2291,7 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%GAMMA_HO2
 
+    ! --- Auto-Reduce Solver Options (hplin, 4/17/22) ---
     ! Use autoreduce?
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'USE_AUTOREDUCE', RC )
     IF ( RC /= GC_SUCCESS ) THEN
@@ -2299,15 +2300,30 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%USE_AUTOREDUCE
 
-    ! Keep halogen spc. active?
-    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_KEEPACTIVE', RC )
+    ! Use target species (OH, NO2) based threshold?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_KEY_THRESHOLD', RC )
     IF ( RC /= GC_SUCCESS ) THEN
        CALL GC_Error( ErrMsg, RC, ThisLoc )
        RETURN
     ENDIF
-    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD
 
-    ! Auto-reduce rate threshold
+    ! ... OH tuning factor and NO2 tuning factors?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_TUNING_OH', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_TUNING_OH
+
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_TUNING_NO2', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_TUNING_NO2
+
+    ! Auto-reduce rate threshold (absolute, only if target spc. is false)
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_THRESHOLD', RC )
     IF ( RC /= GC_SUCCESS ) THEN
        CALL GC_Error( ErrMsg, RC, ThisLoc )
@@ -2323,7 +2339,15 @@ CONTAINS
     ENDIF
     READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
 
-    ! Use append?
+    ! Keep halogen spc. active?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_KEEPACTIVE', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
+
+    ! Append species over external timestep?
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'AUTOREDUCE_IS_APPEND', RC )
     IF ( RC /= GC_SUCCESS ) THEN
        CALL GC_Error( ErrMsg, RC, ThisLoc )
@@ -2421,12 +2445,21 @@ CONTAINS
                             Input_Opt%GAMMA_HO2
        WRITE( 6, 100     ) 'Use auto-reduce solver?     : ', &
                             Input_Opt%USE_AUTOREDUCE
-       WRITE( 6, 120     ) 'Auto-reduce threshold       : ', &
-                            Input_Opt%AUTOREDUCE_THRESHOLD
+       IF ( Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD ) THEN
+         WRITE( 6, 100     ) 'Use target species threshold: ', &
+                             Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD
+         WRITE( 6, 120     ) 'OH tuning factor: ', &
+                             Input_Opt%AUTOREDUCE_TUNING_OH
+         WRITE( 6, 120     ) 'NO2 tuning factor: ', &
+                             Input_Opt%AUTOREDUCE_TUNING_NO2
+       ELSE
+         WRITE( 6, 120     ) 'Absolute AR threshold     : ', &
+                              Input_Opt%AUTOREDUCE_THRESHOLD
+         WRITE( 6, 100     ) 'Use prs. dependent threshold? ', &
+                              Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
+       ENDIF
        WRITE( 6, 100     ) 'Keep halogen spec. active?  : ', &
                             Input_Opt%AUTOREDUCE_IS_KEEPACTIVE
-       WRITE( 6, 100     ) 'Use prs. dependent threshold? ', &
-                            Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD
        WRITE( 6, 100     ) 'Use append in auto-reduce?  :', &
                             Input_Opt%AUTOREDUCE_IS_APPEND
 

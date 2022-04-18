@@ -505,6 +505,9 @@ CONTAINS
     ! define ICNTRL outside of the "SOLVE CHEMISTRY" parallel loop
     ! below because it is passed to KPP as INTENT(IN).
     ! (bmy, 3/28/16)
+    !
+    ! ICNTRL now needs to be updated within the TimeLoop for the AR solver
+    ! (hplin, 4/13/22)
     !========================================================================
 
     !%%%%% TIMESTEPS %%%%%
@@ -523,48 +526,6 @@ CONTAINS
 
     ! Relative tolerance
     RTOL      = 0.5e-2_dp
-
-    !%%%%% SOLVER OPTIONS %%%%%
-
-    ! Zero all slots of ICNTRL
-    ICNTRL    = 0
-
-    ! 0 - non-autonomous, 1 - autonomous
-    ICNTRL(1) = 1
-
-    ! 0 - vector tolerances, 1 - scalars
-    ICNTRL(2) = 0
-
-    ! Select Integrator
-    ! ICNTRL(3)  -> selection of a particular method.
-    ! For Rosenbrock, options are:
-    ! = 0 :  default method is Rodas3
-    ! = 1 :  method is  Ros2
-    ! = 2 :  method is  Ros3
-    ! = 3 :  method is  Ros4
-    ! = 4 :  method is  Rodas3
-    ! = 5:   method is  Rodas4
-    ICNTRL(3) = 4
-
-    ! 0 - adjoint, 1 - no adjoint
-    ICNTRL(7) = 1
-
-    !%%%%% AUTO-REDUCE OPTIONS %%%%%
-    !=====================================================================
-    ! Set options for auto-reduction of mechanism
-    !
-    ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
-    !=====================================================================
-    ICNTRL(8) = 0
-    IF ( Input_Opt%USE_AUTOREDUCE .and. .not. FIRSTCHEM ) THEN
-       ICNTRL(8) = 1
-    ENDIF
-
-    ! Use append functionality?
-    ICNTRL(9) = 0
-    IF ( Input_Opt%AUTOREDUCE_IS_APPEND ) THEN
-       ICNTRL(9) = 1
-    ENDIF
 
     !=======================================================================
     ! %%%%% SOLVE CHEMISTRY -- This is the main KPP solver loop %%%%%
@@ -667,6 +628,7 @@ CONTAINS
     !$OMP DEFAULT( SHARED                                                   )&
     !$OMP PRIVATE( I,        J,        L,       N                           )&
     !$OMP PRIVATE( SO4_FRAC, IERR,     RCNTRL,  ISTATUS,   RSTATE           )&
+    !$OMP PRIVATE( ICNTRL                                                   )&
     !$OMP PRIVATE( SpcID,    KppID,    F,       P,         Vloc             )&
     !$OMP PRIVATE( Aout,     Thread,   RC,      S,         LCH4             )&
     !$OMP PRIVATE( OHreact,  PCO_TOT,  PCO_CH4, PCO_NMVOC, SR               )&
@@ -691,7 +653,8 @@ CONTAINS
        !=====================================================================
        IERR      = 0                        ! KPP success or failure flag
        ISTATUS   = 0.0_dp                   ! Rosenbrock output
-       RCNTRL    = 0.0_fp                   ! Rosenbrock input
+       ICNTRL    = 0                        ! Rosenbrock input (int)
+       RCNTRL    = 0.0_fp                   ! Rosenbrock input (double)
        RSTATE    = 0.0_dp                   ! Rosenbrock output
        SO4_FRAC  = 0.0_fp                   ! Frac of SO4 avail for photolysis
        P         = 0                        ! GEOS-Chem photolyis species ID
@@ -1169,7 +1132,51 @@ CONTAINS
        ! depends on (I,J,L), we must declare RCNTRL as PRIVATE
        ! within the OpenMP parallel loop and define it just
        ! before the call to to Integrate. (bmy, 3/24/16)
+       !
+       ! Ditto for ICNTRL. (hplin, 4/13/22)
        !=====================================================================
+
+       !%%%%% SOLVER OPTIONS %%%%%
+
+       ! Zero all slots of ICNTRL
+       ICNTRL    = 0
+
+       ! 0 - non-autonomous, 1 - autonomous
+       ICNTRL(1) = 1
+
+       ! 0 - vector tolerances, 1 - scalars
+       ICNTRL(2) = 0
+
+       ! Select Integrator
+       ! ICNTRL(3)  -> selection of a particular method.
+       ! For Rosenbrock, options are:
+       ! = 0 :  default method is Rodas3
+       ! = 1 :  method is  Ros2
+       ! = 2 :  method is  Ros3
+       ! = 3 :  method is  Ros4
+       ! = 4 :  method is  Rodas3
+       ! = 5:   method is  Rodas4
+       ICNTRL(3) = 4
+
+       ! 0 - adjoint, 1 - no adjoint
+       ICNTRL(7) = 1
+
+       !%%%%% AUTO-REDUCE OPTIONS %%%%%
+       !=====================================================================
+       ! Set options for auto-reduction of mechanism
+       !
+       ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
+       !=====================================================================
+       ICNTRL(8) = 0
+       IF ( Input_Opt%USE_AUTOREDUCE .and. .not. FIRSTCHEM ) THEN
+          ICNTRL(8) = 1
+       ENDIF
+
+       ! Use append functionality?
+       ICNTRL(9) = 0
+       IF ( Input_Opt%AUTOREDUCE_IS_APPEND ) THEN
+          ICNTRL(9) = 1
+       ENDIF
 
        ! Zero all slots of RCNTRL
        RCNTRL    = 0.0_fp
@@ -1178,29 +1185,38 @@ CONTAINS
        RCNTRL(3) = State_Chm%KPPHvalue(I,J,L)
 
        ! Auto-reduce threshold.
-       ! Pressure-dependent method 1:
+       ! Pressure-dependent (method 1):
        !                                                            Mid-Pressure at Level
        !   Actual_Threshold = AUTOREDUCE_THRESHOLD (at surface) * --------------------------
        !                                                           "Mid-Pressure" at Sfc.
-       IF ( Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
-          RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD * State_Met%PMID(I,J,L) / State_Met%PMID(I,J,1)
-       ENDIF
+       IF ( .not. Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD ) THEN
+           IF ( Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
+              RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD * State_Met%PMID(I,J,L) / State_Met%PMID(I,J,1)
+           ENDIF
 
-       IF ( .not. Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
-          RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
-       ENDIF
+           IF ( .not. Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
+              RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
+           ENDIF
+        ENDIF
 
-       ! Testing only: Dynamic threshold determination
-       ! Use JNO2 as night determination.
-       ! RXN_NO2: NO2 + hv --> NO  + O
-       ICNTRL(10) = ind_OH        ! Assume OH is daytime target species.
-       RCNTRL(10) = 0.001_dp
-       IF(ZPJ(L,RXN_NO2,I,J) .le. 0.05_fp) THEN
-          ICNTRL(10) = ind_NO2    ! NO2 is nighttime target species.
-          RCNTRL(10) = 0.01_dp
-       ENDIF
-       ! Dynamic threshold boundary ratio in RCNTRL(10)
-       ! From discussions 1e-2 might be ok for NO2, 1e-3 for OH
+       ! Method 2: Determine threshold dynamically.
+       IF ( Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD ) THEN
+           ! Daytime target.
+           ICNTRL(10) = ind_OH        ! Assume OH is daytime target species.
+           RCNTRL(10) = Input_Opt%AUTOREDUCE_TUNING_OH
+           ! 1e6 daytime conc ... testing shows 1e-5 as an offset here works best.
+
+           ! Use JNO2 as night determination.
+           ! RXN_NO2: NO2 + hv --> NO  + O
+           ! JNO2 ranges from 0 to 0.02 and is order ~ 1e-4 at the terminator. We set this threshold
+           ! to be slightly relaxed so it captures the terminator, but this needs some
+           ! tweaking.
+           IF(ZPJ(L,RXN_NO2,I,J) .eq. 0.0_fp) THEN
+              ICNTRL(10) = ind_NO2    ! NO2 is nighttime target species.
+              RCNTRL(10) = Input_Opt%AUTOREDUCE_TUNING_NO2
+           ENDIF
+           ! Dynamic threshold boundary ratio in RCNTRL(10)
+        ENDIF
 
        !=====================================================================
        ! Integrate the box forwards

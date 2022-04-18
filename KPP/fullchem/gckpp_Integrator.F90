@@ -245,7 +245,7 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
 !    RSTATUS(3)  -> Hnew, last predicted step (not yet taken)
 !                   For multiple restarts, use Hnew as Hstart 
 !                     in the subsequent run
-!    RSTATUS(10) -> ARthr, last auto-reduction threshold determined
+!    RSTATUS(4)  -> ARthr, last auto-reduction threshold determined
 !                   only if AR is on (ICNTRL(8)) and key spc (ICNTRL(10))
 !
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -462,7 +462,8 @@ SUBROUTINE Rosenbrock(N,Y,Tstart,Tend, &
          Roundoff, Hmin, Hmax, Hstart,            &
          FacMin, FacMax, FacRej, FacSafe,         &
          ! Autoreduce threshold
-         redux_threshold,                         &
+         redux_threshold, AR_target_spc,          &
+         AR_thr_ratio,                            &
          !  Error indicator
          IERR)
     ENDIF
@@ -874,26 +875,26 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
 
       ! Checks should be kept out of tight inner loops.
       IF(keepActive) THEN
-        DO i=1,NVAR
-          ! Short-circuiting using SKIP is very important here.
-          if (.not. keepSpcActive(i) .and. &
-              abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
-             NRMV=NRMV+1
-             ! RMV(NRMV) = i ! not needed unless in append version.
-             DO_SLV(i) = .false.
-             ! DO_FUN(i) = .false.
-             cycle
-          endif
-          SPC_MAP(S)  = i ! Add to full spc map.
-          iSPC_MAP(i) = S
-          S=S+1
-        ENDDO
+       DO i=1,NVAR
+         ! Short-circuiting using SKIP is very important here.
+         if (.not. keepSpcActive(i) .and. &
+             abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+            NRMV=NRMV+1
+            ! RMV(NRMV) = i ! not needed unless in append version.
+            DO_SLV(i) = .false.
+            ! DO_FUN(i) = .false.
+            cycle
+         endif
+         SPC_MAP(S)  = i ! Add to full spc map.
+         iSPC_MAP(i) = S
+         S=S+1
+       ENDDO
       ENDIF
 
       IF (.not. keepActive) THEN
         DO i=1,NVAR
          ! Short-circuiting using SKIP is very important here.
-         if (abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
+         if (abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
             NRMV=NRMV+1
             ! RMV(NRMV) = i ! not needed unless in append version.
             DO_SLV(i) = .false.
@@ -1190,8 +1191,8 @@ Stage: DO istage = 1, ros_S
         Autonomous, VectorTol, Max_no_steps,     &
         Roundoff, Hmin, Hmax, Hstart,            &
         FacMin, FacMax, FacRej, FacSafe,         &
-!~~~> Autorecuce threshold
-        threshold,                               &
+!~~~> Autoreduce threshold
+        threshold, AR_target_spc, AR_thr_ratio,  &
 !~~~> Error indicator
         IERR )
 !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1249,6 +1250,9 @@ Stage: DO istage = 1, ros_S
    REAL(kind=dp) :: alpha_factor ! hplin 4/10/22
 !      Inline local parameters for AR.
    INTEGER :: II, III, idx, nrmv, s
+   REAL(kind=dp), INTENT(IN) :: AR_thr_ratio
+   REAL(kind=dp) :: AR_thr
+   INTEGER, INTENT(IN) :: AR_target_spc
 !~~~>  Initial preparations
    DO_SLV  = .true.
    DO_FUN  = .true.
@@ -1312,6 +1316,13 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       iSPC_MAP = 0
       NRMV     = 0
       S        = 1
+      AR_thr   = threshold
+
+      ! Target species?
+      if(AR_target_spc .gt. 0) then
+          AR_thr = AR_thr_ratio * max(LossY(AR_target_spc), Prod(AR_target_spc))           ! Lin et al., 2022 in prep.
+          RSTATUS(NARthr) = AR_thr
+      endif
 
       ! Checks should be kept out of tight inner loops.
       IF(keepActive) THEN

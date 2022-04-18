@@ -305,9 +305,12 @@ Overhead O3 for FAST-JX :---
  => TOMS/SBUV O3        : F
 Gamma HO2               : 0.2
 Use auto-reduce solver? : F
+Target spc. threshold?  : T
+ => OH tuning factor    : 1e-5
+ => NO2 tuning factor   : 1e-4
+ OR absolute threshold  : 100.0
+ => Prs. dep. threshold?: T
 Keep halogens active?   : T
-Auto-reduce threshold   : 100.0
-Prs. dep. threshold?    : T
 Append species?         : F
 ------------------------+------------------------------------------------------
 %%% PHOTOLYSIS MENU %%% :
