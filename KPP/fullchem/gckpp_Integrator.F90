@@ -878,7 +878,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
        DO i=1,NVAR
          ! Short-circuiting using SKIP is very important here.
          if (.not. keepSpcActive(i) .and. &
-             abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+             abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
             NRMV=NRMV+1
             ! RMV(NRMV) = i ! not needed unless in append version.
             DO_SLV(i) = .false.
@@ -894,7 +894,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       IF (.not. keepActive) THEN
         DO i=1,NVAR
          ! Short-circuiting using SKIP is very important here.
-         if (abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+         if (abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
             NRMV=NRMV+1
             ! RMV(NRMV) = i ! not needed unless in append version.
             DO_SLV(i) = .false.
@@ -1329,7 +1329,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
        DO i=1,NVAR
          ! Short-circuiting using SKIP is very important here.
          if (.not. keepSpcActive(i) .and. &
-             abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+             abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
             NRMV=NRMV+1
             RMV(NRMV) = i
             DO_SLV(i) = .false.
@@ -1345,7 +1345,7 @@ TimeLoop: DO WHILE ( (Direction > 0).AND.((T-Tend)+Roundoff <= ZERO) &
       IF (.not. keepActive) THEN
         DO i=1,NVAR
          ! Short-circuiting using SKIP is very important here.
-         if (abs(LossY(i)).lt.threshold .and. abs(Prod(i)).lt.threshold) then ! per Shen et al., 2020
+         if (abs(LossY(i)).lt.AR_thr .and. abs(Prod(i)).lt.AR_thr) then ! per Shen et al., 2020
             NRMV=NRMV+1
             RMV(NRMV) = i
             DO_SLV(i) = .false.
