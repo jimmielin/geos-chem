@@ -1211,7 +1211,12 @@ CONTAINS
            ! JNO2 ranges from 0 to 0.02 and is order ~ 1e-4 at the terminator. We set this threshold
            ! to be slightly relaxed so it captures the terminator, but this needs some
            ! tweaking.
-           IF(ZPJ(L,RXN_NO2,I,J) .eq. 0.0_fp) THEN
+           !
+           ! For some reason, RXN_NO2 as a proxy fails to propagate the sunset terminator
+           ! even though all diagnostics seem fine, and after a while only the OH scheme applies.
+           ! Use SUNCOSmid as a proxy to fix this. (hplin, 4/20/22)
+           ! IF(ZPJ(L,RXN_NO2,I,J) .eq. 0.0_fp) THEN
+           IF(State_Met%SUNCOSmid(I,J) .le. -0.1391731e+0_fp) THEN
               ICNTRL(10) = ind_NO2    ! NO2 is nighttime target species.
               RCNTRL(10) = Input_Opt%AUTOREDUCE_TUNING_NO2
            ENDIF
