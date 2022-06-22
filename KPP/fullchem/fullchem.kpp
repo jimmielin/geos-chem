@@ -50,6 +50,22 @@ PH2O2 : H2O2;
   REAL(dp) :: INV_TEMP
   !$OMP THREADPRIVATE( INV_TEMP )
 
+  ! Square root of Temperature [K**0.5]
+  REAL(dp) :: SR_TEMP
+  !$OMP THREADPRIVATE( SR_TEMP )
+
+  ! TEMP_OVER_K300 - Temperature [K] / 300.0
+  REAL(dp) :: TEMP_OVER_K300
+  !$OMP THREADPRIVATE( TEMP_OVER_K300 )
+
+  ! K300_OVER_TEMP - 300.0 / Temperature [K]
+  REAL(dp) :: K300_OVER_TEMP
+  !$OMP THREADPRIVATE( K300_OVER_TEMP )
+
+  ! NUMDEN - Air number density [#/cm3]
+  REAL(dp) :: NUMDEN
+  !$OMP THREADPRIVATE( NUMDEN )
+
   ! 4.0 * CON_R * TEMP
   REAL(dp) :: FOUR_R_T
   !$OMP THREADPRIVATE( FOUR_R_T )
