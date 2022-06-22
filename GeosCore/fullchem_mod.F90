@@ -1054,14 +1054,6 @@ CONTAINS
           IF ( KppID > 0 ) C(KppID) = 0.0_dp
        ENDDO
 
-       ! Set VAR and FIX arrays
-       ! This has to be done after the zeroing above
-       VAR(1:NVAR) = C(1:NVAR)
-       FIX         = C(NVAR+1:NSPEC)
-
-       ! Reset CINIT for SpeciesdConc diagnostic
-       CINIT       = C(1:NSPEC)
-
        !=====================================================================
        ! Update reaction rates
        !=====================================================================
@@ -1542,10 +1534,6 @@ CONTAINS
        !=====================================================================
        ! Continue upon successful return...
        !=====================================================================
-
-       ! Copy VAR and FIX back into C (mps, 2/24/16)
-       C(1:NVAR)       = VAR(:)
-       C(NVAR+1:NSPEC) = FIX(:)
 
        ! Revert Alkalinity (only when using sulfur chemistry in KPP)
        IF ( .not. State_Chm%Do_SulfateMod_SeaSalt ) THEN
