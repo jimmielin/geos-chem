@@ -1161,6 +1161,10 @@ CONTAINS
        ! 0 - adjoint, 1 - no adjoint
        ICNTRL(7) = 1
 
+       ! Turn off calling Update_SUN, Update_RCONST, Update_PHOTO from within
+       ! the integrator.  Rate updates are done before calling KPP.
+       ICNTRL(15) = -1
+
        !%%%%% AUTO-REDUCE OPTIONS %%%%%
        !=====================================================================
        ! Set options for auto-reduction of mechanism
@@ -1622,7 +1626,7 @@ CONTAINS
           ! time step (win, 8/4/09)
           IF ( TRIM(FAM_NAMES(F)) == 'PSO4' ) THEN
              ! Hard-coded MW
-             H2SO4_RATE(I,J,L) = VAR(KppID) / AVO * 98.e-3_fp * &
+             H2SO4_RATE(I,J,L) = C(KppID) / AVO * 98.e-3_fp * &
                                  State_Met%AIRVOL(I,J,L)  * &
                                  1.0e+6_fp / DT
 
@@ -1644,7 +1648,8 @@ CONTAINS
        IF ( State_Diag%Archive_NoxTau ) THEN
           ! gckpp_Function.F90 function Fun must be modified to use optional
           ! argument Vdotout if building with GEOS
-          CALL Fun( VAR, FIX, RCONST, Vloc, Aout=Aout, Vdotout=Vdotout )
+          CALL Fun( C(1:NVAR), C(NVAR+1:NSPEC), RCONST,                          &
+                    Vloc,      Aout=Aout,       Vdotout=Vdotout )
           NOxTau = Vdotout(ind_NO) + Vdotout(ind_NO2) + Vdotout(ind_NO3)         &
                  + 2.*Vdotout(ind_N2O5) + Vdotout(ind_ClNO2) + Vdotout(ind_HNO2) &
                  + Vdotout(ind_HNO4)
@@ -1666,14 +1671,14 @@ CONTAINS
        !
        ! NOTE: KppId is the KPP ID # for each of the prod and loss
        ! diagnostic species.  This is the value used to index the
-       ! KPP "VAR" array (in module gckpp_Global.F90).
+       ! KPP "C" array (in module gckpp_Global.F90).
        !====================================================================
 
        ! Chemical loss of species or families [molec/cm3/s]
        IF ( State_Diag%Archive_Loss ) THEN
           DO S = 1, State_Diag%Map_Loss%nSlots
              KppId = State_Diag%Map_Loss%slot2Id(S)
-             State_Diag%Loss(I,J,L,S) = VAR(KppID) / DT
+             State_Diag%Loss(I,J,L,S) = C(KppID) / DT
           ENDDO
        ENDIF
 
@@ -1681,7 +1686,7 @@ CONTAINS
        IF ( State_Diag%Archive_Prod ) THEN
           DO S = 1, State_Diag%Map_Prod%nSlots
              KppID = State_Diag%Map_Prod%slot2Id(S)
-             State_Diag%Prod(I,J,L,S) = VAR(KppID) / DT
+             State_Diag%Prod(I,J,L,S) = C(KppID) / DT
           ENDDO
        ENDIF
 
@@ -1693,10 +1698,10 @@ CONTAINS
             State_Diag%Archive_ProdCOfromNMVOC ) THEN
 
           ! Total production of CO
-          PCO_TOT   = VAR(id_PCO) / DT
+          PCO_TOT   = C(id_PCO) / DT
 
           ! Loss of CO from CH4
-          LCH4      = VAR(id_LCH4) / DT
+          LCH4      = C(id_LCH4) / DT
 
           ! P(CO)_CH4 is LCH4. Cap so that it is never greater
           ! than total P(CO) to prevent negative P(CO)_NMVOC.
