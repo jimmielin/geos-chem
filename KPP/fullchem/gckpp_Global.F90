@@ -176,6 +176,16 @@ MODULE gckpp_Global
   REAL(dp) :: SUNCOS
   !$OMP THREADPRIVATE( SUNCOS )
 
+  !==========================================================================
+  ! Molecular weights and Henry's law constants
+  !==========================================================================
+
+  ! Species molecular weight [g/mole]
+  REAL(dp) :: MW(NSPEC)
+
+  ! Square root of species molecular weight [g/mole]
+  REAL(dp) :: SR_MW(NSPEC)
+  
   ! Henry's law constants (do not need to be THREADPRIVATE)
   REAL(dp) :: HENRY_K0(NSPEC)
   REAL(dp) :: HENRY_CR(NSPEC)
