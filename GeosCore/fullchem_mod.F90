@@ -667,8 +667,6 @@ CONTAINS
        LWC       = 0.0_fp                   ! Liquid water content
        SIZE_RES  = .FALSE.                  ! Size resolved calculation?
        C         = 0.0_dp                   ! KPP species conc's
-       VAR       = 0.0_dp                   ! KPP variable species conc's
-       FIX       = 0.0_dp                   ! KPP fixed species conc's
        RCONST    = 0.0_dp                   ! KPP rate constants
        PHOTOL    = 0.0_dp                   ! Photolysis array for KPP
        K_CLD     = 0.0_dp                   ! Sulfur in-cloud rxn het rates
