@@ -673,6 +673,7 @@ CONTAINS
        PHOTOL    = 0.0_dp                   ! Photolysis array for KPP
        K_CLD     = 0.0_dp                   ! Sulfur in-cloud rxn het rates
        K_MT      = 0.0_dp                   ! Sulfur sea salt rxn het rates
+       CFACTOR   = 1.0_dp                   ! KPP conversion factor
 #ifdef MODEL_CLASSIC
 #ifndef NO_OMP
        Thread    = OMP_GET_THREAD_NUM() + 1 ! OpenMP thread number
@@ -882,9 +883,6 @@ CONTAINS
                             ThreadNum = Thread,                              &
                             RC        =  RC                                 )
        ENDIF
-
-       ! Initialize KPP for this grid box
-       CALL Init_KPP()
 
        ! Copy values into the various KPP global variables
        CALL Set_Kpp_GridBox_Values( I          = I,                          &
@@ -1395,16 +1393,13 @@ CONTAINS
           ! Retry the integration with non-optimized
           ! settings
           RCNTRL(3)  = 0e+0_fp
+          C          = 0.0_dp
 
           ! Retry the integration without auto-reduce solver
           IF ( Input_Opt%USE_AUTOREDUCE ) THEN
              ! ICNTRL(8)  = 0
              RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
           ENDIF
-
-          CALL Init_KPP( )
-          VAR = C(1:NVAR)
-          FIX = C(NVAR+1:NSPEC)
 
           ! Update rates again
           CALL Update_RCONST( )
