@@ -90,7 +90,10 @@ for irxt in rxt:
             nn = 0
         # reaction number
         if 'index ' in spl[1]:
-            rn = int(spl[1].split('index ')[1])
+            try:
+                rn = int(spl[1].split('index ')[1])
+            except ValueError:
+                rn = int(spl[1].split('index up to ')[1])
             if irct != rn:
                print('Warning: reaction number mismatch')
         else:

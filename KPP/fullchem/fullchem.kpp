@@ -5,6 +5,7 @@
 #MEX off
 #STOICMAT off
 #AUTOREDUCE on
+#UPPERCASEF90 on
 #FUNCTION split
 
 #INCLUDE fullchem.eqn
