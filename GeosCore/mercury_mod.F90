@@ -645,25 +645,48 @@ CONTAINS
           IF ( KppID > 0 ) C(KppID) = 0.0_dp
        ENDDO
 
-       ! VAR and FIX are chunks of array C (mps, 2/24/16)
-       VAR(1:NVAR) = C(1:NVAR)
-       FIX         = C(NVAR+1:NSPEC)
-
        ! Update the array of rate constants
        CALL Update_RCONST( )
-       CALL Fun_SPLIT ( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
 
-       ! Archive KPP reaction rates
+       !---------------------------------------------------------------------
+       ! HISTORY (aka netCDF diagnostics)
+       !
+       ! Archive KPP equation rates (Aout).  For GEOS-Chem in GEOS, also
+       ! archive the time derivative of variable species (Vdotout).
+       !
+       ! NOTE: Replace VAR with C(1:NVAR) and FIX with C(NVAR+1:NSPEC),
+       ! because VAR and FIX are now local to the integrator
+       !  -- Bob Yantosca (03 May 2022)
+       !---------------------------------------------------------------------
        IF ( State_Diag%Archive_RxnRate ) THEN
-          CALL Fun_SPLIT ( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
-#if !defined( MODEL_GEOS )
-          DO N = 1, NREACT
-             State_Diag%RxnRate(I,J,L,N) = Aout(N)
+
+#ifdef MODEL_GEOS
+          !------------------------------------------
+          ! GEOS-Chem in GEOS: Get Aout and Vdotout
+          !------------------------------------------
+          CALL Fun ( V       = C(1:NVAR),                                    &
+                     F       = C(NVAR+1:NSPEC),                              &
+                     RCT     = RCONST,                                       &
+                     Vdot    = Vloc,                                         &
+                     Aout    = Aout,                                         &
+                     Vdotout = Vdotout                                      )
 #else
-          DO N = 1, Input_Opt%NN_RxnRates
-             State_Diag%RxnRate(I,J,L,N) = RCONST(N)!Aout(Input_Opt%RxnRates_IDs(N))
+          !------------------------------------------
+          ! All other contexts: Get Aout only
+          !------------------------------------------
+          CALL Fun ( V       = C(1:NVAR),                                    &
+                     F       = C(NVAR+1:NSPEC),                              &
+                     RCT     = RCONST,                                       &
+                     Vdot    = Vloc,                                         &
+                     Aout    = Aout                                         )
 #endif
+
+          ! Only save requested equation rates
+          DO S = 1, State_Diag%Map_RxnRate%nSlots
+             N = State_Diag%Map_RxnRate%slot2Id(S)
+             State_Diag%RxnRate(I,J,L,S) = Aout(N)
           ENDDO
+
        ENDIF
 
        !=====================================================================
