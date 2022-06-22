@@ -1091,38 +1091,38 @@ CONTAINS
        ! Archive KPP reaction rates [s-1]
        ! See gckpp_Monitor.F90 for a list of chemical reactions
        !
-       ! FIXME hplin 10/18/21: this is a version using the previous
-       ! "aggregate" version of Fun(). Now we use Fun_SPLIT() so the version
-       ! with that is used instead (12/2/21)
-       !
-       ! The old version is kept for reference.
+       ! NOTE: In KPP 2.5.0+, VAR and FIX are now private to the integrator
+       ! and point to C.  Therefore, pass C(1:NVAR) instead of VAR and
+       ! C(NVAR+1:NSPEC) instead of FIX to routine FUN.
        !=====================================================================
-       ! IF ( State_Diag%Archive_RxnRate ) THEN
-       !    CALL Fun( VAR, FIX, RCONST, Vloc, Aout=Aout )
-       !    DO S = 1, State_Diag%Map_RxnRate%nSlots
-       !       N = State_Diag%Map_RxnRate%slot2Id(S)
-       !       State_Diag%RxnRate(I,J,L,S) = Aout(N)
-       !    ENDDO
-       ! ENDIF
-
-       IF ( State_Diag%Archive_RxnRate .or. State_Diag%Archive_KppStiffness ) THEN
-          ! Force DO_FUN so all rates are calculated
-          DO_FUN = .true.
-
+       IF ( State_Diag%Archive_RxnRate ) THEN
 #ifdef MODEL_GEOS
-          ! gckpp_Function.F90 function Fun must be modified to use optional
-          ! argument Vdotout if building with GEOS
-          CALL Fun_SPLIT( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout, Vdotout=Vdotout )
+          !---------------------------------------------------
+          ! GEOS-Chem in NASA/GEOS:
+          ! Get equation rates (Aout) and the time derivative
+          ! of variable species concentrations (Vdotout)
+          !---------------------------------------------------
+          CALL Fun( V       = C(1:NVAR),                                     &
+                    F       = C(NVAR+1:NSPEC),                               &
+                    RCT     = RCONST,                                        &
+                    Vdot    = Vloc,                                          &
+                    Aout    = Aout,                                          &
+                    Vdotout = Vdotout                                       )
 #else
-          CALL Fun_SPLIT( VAR, FIX, RCONST, P_VAR, D_VAR, Aout=Aout )
+          !---------------------------------------------------
+          ! All other contexts
+          ! Get equation rates (Aout) only
+          !---------------------------------------------------
+          CALL Fun( V       = C(1:NVAR),                                     &
+                    F       = C(NVAR+1:NSPEC),                               &
+                    RCT     = RCONST,                                        &
+                    Vdot    = Vloc,                                          &
+                    Aout    = Aout                                          )
 #endif
-
-          IF ( State_Diag%Archive_RxnRate ) THEN
-             DO S = 1, State_Diag%Map_RxnRate%nSlots
-                N = State_Diag%Map_RxnRate%slot2Id(S)
-               State_Diag%RxnRate(I,J,L,S) = Aout(N)
-             ENDDO
-          ENDIF
+          DO S = 1, State_Diag%Map_RxnRate%nSlots
+             N = State_Diag%Map_RxnRate%slot2Id(S)
+             State_Diag%RxnRate(I,J,L,S) = Aout(N)
+          ENDDO
        ENDIF
 
        !=====================================================================

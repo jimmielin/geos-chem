@@ -267,7 +267,7 @@ CONTAINS
     INTEGER                :: P,         MONTH,    YEAR,      IRH
     INTEGER                :: TotSteps,  TotFuncs, TotJacob,  TotAccep
     INTEGER                :: TotRejec,  TotNumLU, HCRC,      IERR
-    INTEGER                :: Day
+    INTEGER                :: Day,       S
     REAL(fp)               :: REL_HUM,   Start,     Finish,   rtim
     REAL(fp)               :: itim,      TOUT,      T,        TIN
 
@@ -284,6 +284,7 @@ CONTAINS
     INTEGER                :: ISTATUS(20)
     REAL(dp)               :: RCNTRL(20)
     REAL(dp)               :: RSTATE(20)
+    REAL(dp)               :: Vloc(NVAR)
     REAL(dp)               :: Aout(NREACT)
 
     ! Pointers
