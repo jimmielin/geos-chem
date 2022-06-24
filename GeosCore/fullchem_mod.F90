@@ -1157,17 +1157,17 @@ CONTAINS
        !=====================================================================
        ! Set options for auto-reduction of mechanism
        !
-       ! RCNTRL(8) is the threshold for reduction. (hplin, 10/18/21)
+       ! RCNTRL(12) is the threshold for reduction. (hplin, 10/18/21)
        !=====================================================================
-       ICNTRL(8) = 0
+       ICNTRL(12) = 0
        IF ( Input_Opt%USE_AUTOREDUCE .and. .not. FIRSTCHEM ) THEN
-          ICNTRL(8) = 1
+          ICNTRL(12) = 1
        ENDIF
 
        ! Use append functionality?
-       ICNTRL(9) = 0
+       ICNTRL(13) = 0
        IF ( Input_Opt%AUTOREDUCE_IS_APPEND ) THEN
-          ICNTRL(9) = 1
+          ICNTRL(13) = 1
        ENDIF
 
        ! Zero all slots of RCNTRL
@@ -1183,19 +1183,19 @@ CONTAINS
        !                                                           "Mid-Pressure" at Sfc.
        IF ( .not. Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD ) THEN
            IF ( Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
-              RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD * State_Met%PMID(I,J,L) / State_Met%PMID(I,J,1)
+              RCNTRL(12) = Input_Opt%AUTOREDUCE_THRESHOLD * State_Met%PMID(I,J,L) / State_Met%PMID(I,J,1)
            ENDIF
 
            IF ( .not. Input_Opt%AUTOREDUCE_IS_PRS_THRESHOLD ) THEN
-              RCNTRL(8) = Input_Opt%AUTOREDUCE_THRESHOLD
+              RCNTRL(12) = Input_Opt%AUTOREDUCE_THRESHOLD
            ENDIF
         ENDIF
 
        ! Method 2: Determine threshold dynamically.
        IF ( Input_Opt%AUTOREDUCE_IS_KEY_THRESHOLD ) THEN
            ! Daytime target.
-           ICNTRL(10) = ind_OH        ! Assume OH is daytime target species.
-           RCNTRL(10) = Input_Opt%AUTOREDUCE_TUNING_OH
+           ICNTRL(14) = ind_OH        ! Assume OH is daytime target species.
+           RCNTRL(14) = Input_Opt%AUTOREDUCE_TUNING_OH
            ! 1e6 daytime conc ... testing shows 1e-5 as an offset here works best.
 
            ! Use JNO2 as night determination.
@@ -1209,10 +1209,10 @@ CONTAINS
            ! Use SUNCOSmid as a proxy to fix this. (hplin, 4/20/22)
            ! IF(ZPJ(L,RXN_NO2,I,J) .eq. 0.0_fp) THEN
            IF(State_Met%SUNCOSmid(I,J) .le. -0.1391731e+0_fp) THEN
-              ICNTRL(10) = ind_NO2    ! NO2 is nighttime target species.
-              RCNTRL(10) = Input_Opt%AUTOREDUCE_TUNING_NO2
+              ICNTRL(14) = ind_NO2    ! NO2 is nighttime target species.
+              RCNTRL(14) = Input_Opt%AUTOREDUCE_TUNING_NO2
            ENDIF
-           ! Dynamic threshold boundary ratio in RCNTRL(10)
+           ! Dynamic threshold boundary ratio in RCNTRL(14)
         ENDIF
 
        !=====================================================================
@@ -1395,8 +1395,8 @@ CONTAINS
 
           ! Retry the integration without auto-reduce solver
           IF ( Input_Opt%USE_AUTOREDUCE ) THEN
-             ! ICNTRL(8)  = 0
-             RCNTRL(8) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
+             ! ICNTRL(12)  = 0
+             RCNTRL(12) = -1.d0 ! Turns off autoreduce w/o using ICNTRL
           ENDIF
 
           ! Update rates again
