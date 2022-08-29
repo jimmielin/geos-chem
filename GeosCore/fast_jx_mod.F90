@@ -88,6 +88,9 @@ MODULE FAST_JX_MOD
   INTEGER :: id_IONO2,  id_I2O2, id_CH3I,   id_CH2I2, id_I2O4
   INTEGER :: id_I2O3
 
+
+  INTEGER :: id_NIT, id_SO4, id_SALA
+
   ! Needed for scaling JNIT/JNITs photolysis to JHNO3
   REAL(fp)      :: JscaleNITs, JscaleNIT, JNITChanA, JNITChanB
 
@@ -1726,6 +1729,11 @@ CONTAINS
        id_CH2I2    = IND_('CH2I2'   )
        id_I2O4     = IND_('I2O4'    )
        id_I2O3     = IND_('I2O3'    )
+
+
+       id_NIT = IND_('NIT')
+       id_SO4 = IND_('SO4')
+       id_SALA = IND_('SALA')
 
        ! Print info
        IF ( Input_Opt%amIRoot ) THEN
@@ -5266,7 +5274,7 @@ CONTAINS
 !\\
 ! !INTERFACE:
 !
-  SUBROUTINE PHOTRATE_ADJ( Input_Opt, State_Diag, State_Met,                 &
+  SUBROUTINE PHOTRATE_ADJ( Input_Opt, State_Chm,  State_Diag, State_Met,     &
                            I,         J,          L,                         &
                            FRAC,      RC                                    )
 !
@@ -5276,10 +5284,13 @@ CONTAINS
     USE Input_Opt_Mod,  ONLY : OptInput
     USE State_Diag_Mod, ONLY : DgnState
     USE State_Met_Mod,  ONLY : MetState
+    USE State_Chm_Mod,  ONLY : ChmState
+    USE Error_Mod, ONLY: SAFE_DIV
 !
 ! !INPUT PARAMETERS:
 !
     TYPE(OptInput), INTENT(IN)    :: Input_Opt  ! Input_Options object
+    TYPE(ChmState), INTENT(IN) :: State_Chm
     TYPE(MetState), INTENT(IN)    :: State_Met  ! Meteorology State object
     INTEGER,        INTENT(IN)    :: I, J, L    ! Lon, lat, lev indices
     REAL(fp),       INTENT(IN)    :: FRAC       ! Result of SO4_PHOTFRAC,
@@ -5312,6 +5323,8 @@ CONTAINS
     REAL(fp) :: C_O2,     C_N2, C_H2,   ITEMPK, RO1DplH2O
     REAL(fp) :: RO1DplH2, RO1D, NUMDEN, TEMP,   C_H2O
 
+    REAL(fp) :: C_NIT, C_SO4, C_SALA, FAC
+
     !=================================================================
     ! PHOTRATE_ADJ begins here!
     !=================================================================
@@ -5334,12 +5347,18 @@ CONTAINS
        JNITChanB  = Input_Opt%JNITChanB
        JNITChanA  = JNITChanA / 100.0_fp
        JNITChanB  = JNITChanB / 100.0_fp
+
+       C_NIT      = State_Chm%Species(I,J,L,id_NIT)
+        C_SALA     = State_Chm%Species(I,J,L,id_SALA)
+        FAC        = SAFE_DIV( C_SALA, C_SALA + C_NIT, 1e+0_fp )
+        FAC        = MAX( 0.1e+0_fp, FAC )
+
        ! Set the photolysis rate of NITs
        ZPJ(L,RXN_JNITSa,I,J) = ZPJ(L,RXN_JHNO3,I,J) * JscaleNITs
        ZPJ(L,RXN_JNITSb,I,J) = ZPJ(L,RXN_JHNO3,I,J) * JscaleNITs
        ! Set the photolysis rate of NIT
-       ZPJ(L,RXN_JNITa,I,J) = ZPJ(L,RXN_JHNO3,I,J) * JscaleNIT
-       ZPJ(L,RXN_JNITb,I,J) = ZPJ(L,RXN_JHNO3,I,J) * JscaleNIT
+       ZPJ(L,RXN_JNITa,I,J) = ZPJ(L,RXN_JHNO3,I,J) * JscaleNIT * FAC   ! update for nitrate photol
+       ZPJ(L,RXN_JNITb,I,J) = ZPJ(L,RXN_JHNO3,I,J) * JscaleNIT * FAC   ! update for nitrate photol
        ! Adjust to scaling for channels set in input.geos
        ! NOTE: channel scaling is 1 in FJX_j2j.dat, then updated here
        ZPJ(L,RXN_JNITSa,I,J) = ZPJ(L,RXN_JNITSa,I,J) * JNITChanA

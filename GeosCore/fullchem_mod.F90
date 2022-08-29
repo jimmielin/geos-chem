@@ -646,7 +646,7 @@ CONTAINS
           ! (1) H2SO4 + hv -> SO2 + OH + OH   (UCX-based mechanisms)
           ! (2) O3    + hv -> O2  + O         (UCX-based mechanisms)
           ! (2) O3    + hv -> OH  + OH        (trop-only mechanisms)
-          CALL PHOTRATE_ADJ( Input_Opt, State_Diag, State_Met, I,            &
+          CALL PHOTRATE_ADJ( Input_Opt, State_Chm, State_Diag, State_Met, I,&
                              J,         L,          SO4_FRAC,  IERR         )
 
           ! Loop over the FAST-JX photolysis species

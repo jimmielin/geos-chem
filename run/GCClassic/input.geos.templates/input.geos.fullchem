@@ -279,9 +279,9 @@ Calc. strat. aero. OD?  : T
 Enhance BC Absorption?  : T
  => hydrophilic BC      : 1.5
  => hydrophobic BC      : 1.0
-Photolyse nitrate aer.? : F
- => NITs Jscale (JHNO3) : 0.0
- => NIT  Jscale (JHNO3) : 0.0
+Photolyse nitrate aer.? : T
+ => NITs Jscale (JHNO3) : 100.0
+ => NIT  Jscale (JHNO3) : 100.0
  => % channel A (HONO)  : 66.667
  => % channel B (NO2)   : 33.333
 ------------------------+------------------------------------------------------
