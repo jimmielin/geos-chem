@@ -5337,7 +5337,7 @@ CONTAINS
     ! For all mechanisms. Set the photolysis rate of NITs and NIT to a
     ! scaled value of JHNO3. NOTE: this is set in geoschem_config.yml
     ! Allow particulate nitrate photolysis in the troposphere only
-    IF ( Input_Opt%hvAerNIT .and.
+    IF ( Input_Opt%hvAerNIT .and. &
          State_Met%InTroposphere(I,J,L) ) THEN
 
        ! Get NIT and NITs concentrations [molec cm-3]
