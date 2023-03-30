@@ -1234,7 +1234,7 @@ MODULE State_Diag_Mod
      LOGICAL                     :: Archive_CO2photrate
 #endif
 
-#ifdef MODEL_WRF
+#if defined( MODEL_WRF ) || defined( MODEL_CESM )
      !----------------------------------------------------------------------
      ! The following diagnostics are only used when
      ! GEOS-Chem is interfaced into WRF (as WRF-GC)
@@ -2385,7 +2385,7 @@ CONTAINS
     State_Diag%Archive_CO2photrate                 = .FALSE.
 #endif
 
-#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
+#if defined( MODEL_GEOS ) || defined( MODEL_WRF ) || defined( MODEL_CESM )
     !=======================================================================
     ! These diagnostics are only activated when running GC
     ! either in NASA/GEOS or in WRF
@@ -6051,7 +6051,7 @@ CONTAINS
           RETURN
        ENDIF
 
-#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
+#if defined( MODEL_GEOS ) || defined( MODEL_WRF ) || defined( MODEL_CESM )
        !--------------------------------------------------------------------
        ! KPP error flag
        !--------------------------------------------------------------------
@@ -12041,7 +12041,7 @@ CONTAINS
     IF ( RC /= GC_SUCCESS ) RETURN
 #endif
 
-#if defined(MODEL_GEOS) || defined(MODEL_WRF)
+#if defined(MODEL_GEOS) || defined(MODEL_WRF) || defined( MODEL_CESM )
     !=======================================================================
     ! These fields are only used when GEOS-Chem
     ! is interfaced to NASA/GEOS or to WRF (as WRF-GC)
@@ -12955,7 +12955,7 @@ CONTAINS
        IF ( isUnits   ) Units = 'kg m-2 s-1'
        IF ( isRank    ) Rank  = 2
 
-#if defined( MODEL_GEOS ) || defined( MODEL_WRF )
+#if defined( MODEL_GEOS ) || defined( MODEL_WRF ) || defined( MODEL_CESM )
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPERROR' ) THEN
        IF ( isDesc    ) Desc  = 'KppError'
        IF ( isUnits   ) Units = '1'
