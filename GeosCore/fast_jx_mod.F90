@@ -350,7 +350,7 @@ CONTAINS
        OPTD = State_Met%OPTD(NLON,NLAT,1:State_Grid%NZ)
 
        ! ** hplin 3/8/23: prescribe zero cloud cover ** !
-       OPTD(:) = 0d0
+       ! OPTD(:) = 0d0
 
        !-----------------------------------------------------------
        !### If you want to exclude aerosol OD, mineral dust OD,
