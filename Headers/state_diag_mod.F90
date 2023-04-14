@@ -1027,6 +1027,9 @@ MODULE State_Diag_Mod
      REAL(f4), POINTER :: Hg2GasToSSA              (:,:,:)
      LOGICAL :: Archive_Hg2GasToSSA
 
+     REAL(f4),           POINTER :: NIThvEF(:,:,:)
+     LOGICAL                     :: Archive_NIThvEF
+
      !%%%%% Simulation with RRTMG %%%%%
 
      INTEGER                     :: nRadOut
@@ -1189,9 +1192,6 @@ MODULE State_Diag_Mod
 
      REAL(f4),           POINTER :: RO2concAfterChem(:,:,:)
      LOGICAL                     :: Archive_RO2concAfterChem
-
-     REAL(f4),           POINTER :: NIThvEF(:,:,:)
-     LOGICAL                     :: Archive_NIThvEF
 
      !%%%%% PM2.5 diagnostics %%%%%
 
@@ -2258,6 +2258,9 @@ CONTAINS
     State_Diag%Hg2GasToHg2StrP                     => NULL()
     State_Diag%Hg2GasToSSA                         => NULL()
 
+    State_Diag%NIThvEF                             => NULL()
+    State_Diag%Archive_NIThvEF                     = .FALSE.
+
     State_Diag%Archive_HgBrAfterChem               = .FALSE.
     State_Diag%Archive_HgClAfterChem               = .FALSE.
     State_Diag%Archive_HgOHAfterChem               = .FALSE.
@@ -2347,9 +2350,6 @@ CONTAINS
 
     State_Diag%RO2concAfterChem                    => NULL()
     State_Diag%Archive_RO2concAfterChem            = .FALSE.
-
-    State_Diag%NIThvEF                             => NULL()
-    State_Diag%Archive_NIThvEF                     = .FALSE.
 
     State_Diag%PM25ni                              => NULL()
     State_Diag%Archive_PM25ni                      = .FALSE.
@@ -6377,25 +6377,6 @@ CONTAINS
           CALL GC_Error( errMsg, RC, thisLoc )
           RETURN
        ENDIF
-
-       diagID  = 'NIThvEF'
-       CALL Init_and_Register(                                               &
-            Input_Opt      = Input_Opt,                                      &
-            State_Chm      = State_Chm,                                      &
-            State_Diag     = State_Diag,                                     &
-            State_Grid     = State_Grid,                                     &
-            DiagList       = Diag_List,                                      &
-            TaggedDiagList = TaggedDiag_List,                                &
-            Ptr2Data       = State_Diag%NIThvEF         ,                    &
-            archiveData    = State_Diag%Archive_NIThvEF         ,            &
-            diagId         = diagId,                                         &
-            RC             = RC                                             )
-
-       IF ( RC /= GC_SUCCESS ) THEN
-          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
-          CALL GC_Error( errMsg, RC, thisLoc )
-          RETURN
-       ENDIF
 #endif
 
        !--------------------------------------------------------------------
@@ -9732,6 +9713,28 @@ CONTAINS
        ENDIF
 
        !----------------------------------------------------------------
+       ! Aerosol nitrate photolysis fine mode NIT enhancement factor (EF)
+       !----------------------------------------------------------------
+       diagID  = 'NIThvEF'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%NIThvEF         ,                    &
+            archiveData    = State_Diag%Archive_NIThvEF         ,            &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !----------------------------------------------------------------
        ! Br concentration
        !----------------------------------------------------------------
        diagID  = 'ConcBr'
@@ -10792,6 +10795,11 @@ CONTAINS
 
     CALL Finalize( diagId   = 'OHreactivity',                                &
                    Ptr2Data = State_Diag%OHreactivity,                       &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'NIThvEF',                             &
+                   Ptr2Data = State_Diag%NIThvEF         ,                    &
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
@@ -12002,11 +12010,6 @@ CONTAINS
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
-    CALL Finalize( diagId   = 'NIThvEF',                             &
-                   Ptr2Data = State_Diag%NIThvEF         ,                    &
-                   RC       = RC                                            )
-    IF ( RC /= GC_SUCCESS ) RETURN
-
     CALL Finalize( diagId   = 'PM25ni',                                      &
                    Ptr2Data = State_Diag%PM25ni,                             &
                    RC       = RC                                            )
@@ -12963,11 +12966,6 @@ CONTAINS
        IF ( isDesc    ) Desc  = 'Peroxy radical concentration immediately after chemistry'
        IF ( isUnits   ) Units = 'molec cm-3'
        IF ( isRank    ) Rank  = 3
-
-    ELSE IF ( TRIM( Name_AllCaps ) == 'NITHVEF' ) THEN
-       IF ( isDesc    ) Desc  = 'Nitrate photolysis fine mode aerosol enhancement factor EF'
-       IF ( isUnits   ) Units = '1'
-       IF ( isRank    ) Rank  = 3
 #endif
 
     ELSE IF ( TRIM( Name_AllCaps ) == 'HO2CONCAFTERCHEM' )  THEN
@@ -12989,6 +12987,11 @@ CONTAINS
        IF ( isDesc    ) Desc  = 'CH4 pseudo-flux balancing chemistry'
        IF ( isUnits   ) Units = 'kg m-2 s-1'
        IF ( isRank    ) Rank  = 2
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'NITHVEF' ) THEN
+       IF ( isDesc    ) Desc  = 'Nitrate photolysis fine mode aerosol enhancement factor EF'
+       IF ( isUnits   ) Units = '1'
+       IF ( isRank    ) Rank  = 3
 
 #if defined( MODEL_GEOS ) || defined( MODEL_WRF ) || defined( MODEL_CESM )
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPERROR' ) THEN
