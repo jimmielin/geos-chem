@@ -6524,6 +6524,28 @@ CONTAINS
           RETURN
        ENDIF
 
+       !----------------------------------------------------------------
+       ! Aerosol nitrate photolysis fine mode NIT enhancement factor (EF)
+       !----------------------------------------------------------------
+       diagID  = 'NIThvEF'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%NIThvEF         ,                    &
+            archiveData    = State_Diag%Archive_NIThvEF         ,            &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
        !--------------------------------------------------------------------
        ! CH4 loss in the troposphere
        !--------------------------------------------------------------------
@@ -6603,6 +6625,8 @@ CONTAINS
                 diagID = 'LossOHbyMCFcolumnTrop'
              CASE( 10 )
                 diagID = 'OHconcAfterChem'
+             CASE( 11 )
+                diagID = 'NIThvEF'
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -9703,28 +9727,6 @@ CONTAINS
             TaggedDiagList = TaggedDiag_List,                                &
             Ptr2Data       = State_Diag%Hg2GasToSSA,                         &
             archiveData    = State_Diag%Archive_Hg2GasToSSA,                 &
-            diagId         = diagId,                                         &
-            RC             = RC                                             )
-
-       IF ( RC /= GC_SUCCESS ) THEN
-          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
-          CALL GC_Error( errMsg, RC, thisLoc )
-          RETURN
-       ENDIF
-
-       !----------------------------------------------------------------
-       ! Aerosol nitrate photolysis fine mode NIT enhancement factor (EF)
-       !----------------------------------------------------------------
-       diagID  = 'NIThvEF'
-       CALL Init_and_Register(                                               &
-            Input_Opt      = Input_Opt,                                      &
-            State_Chm      = State_Chm,                                      &
-            State_Diag     = State_Diag,                                     &
-            State_Grid     = State_Grid,                                     &
-            DiagList       = Diag_List,                                      &
-            TaggedDiagList = TaggedDiag_List,                                &
-            Ptr2Data       = State_Diag%NIThvEF         ,                    &
-            archiveData    = State_Diag%Archive_NIThvEF         ,            &
             diagId         = diagId,                                         &
             RC             = RC                                             )
 
