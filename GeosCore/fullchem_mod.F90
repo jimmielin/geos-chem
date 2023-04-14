@@ -966,6 +966,20 @@ CONTAINS
        ! Update the array of rate constants
        CALL Update_RCONST( )
 
+       ! Zero out halogen chemistry reaction rates in the troposphere
+       ! (hplin, 3/24/23)
+       ! IF ( State_Met%InTroposphere(I,J,L) ) THEN
+       !      ! Br + O3 = BrO + O2 to             168
+       !      ! CH3Br + OH = Br + H2O + HO2       190
+       !      RCONST(168:190) = 0.0d0
+       !      ! I + NO = INO                      305
+       !      ! CH3I + OH = H2O + I + MO2         335
+       !      RCONST(305:335) = 0.0d0
+       !      ! CH4 + Cl = HCl + MO2              261
+       !      ! Br + PRPE = HBr + PO2             304
+       !      RCONST(261:304) = 0.0d0
+       ! ENDIF
+
        ! Stop timer
        IF ( Input_Opt%useTimers ) THEN
           CALL Timer_End( TimerName = "     RCONST",                         &
