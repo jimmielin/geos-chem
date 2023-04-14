@@ -315,6 +315,11 @@ CONTAINS
     ENDIF
 #endif
 
+    ! Reset NIThv diagnostic
+    IF ( State_Diag%Archive_NIThvEF ) THEN
+        State_Diag%NIThvEF(:,:,:) = 0.0_f4
+    ENDIF
+
     !========================================================================
     ! Zero out certain species:
     !    - isoprene oxidation counter species (dkh, bmy, 6/1/06)

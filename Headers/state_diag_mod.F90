@@ -1190,6 +1190,9 @@ MODULE State_Diag_Mod
      REAL(f4),           POINTER :: RO2concAfterChem(:,:,:)
      LOGICAL                     :: Archive_RO2concAfterChem
 
+     REAL(f4),           POINTER :: NIThvEF(:,:,:)
+     LOGICAL                     :: Archive_NIThvEF
+
      !%%%%% PM2.5 diagnostics %%%%%
 
      REAL(f4),           POINTER :: PM25ni(:,:,:)     ! PM25 nitrates
@@ -2344,6 +2347,9 @@ CONTAINS
 
     State_Diag%RO2concAfterChem                    => NULL()
     State_Diag%Archive_RO2concAfterChem            = .FALSE.
+
+    State_Diag%NIThvEF                             => NULL()
+    State_Diag%Archive_NIThvEF                     = .FALSE.
 
     State_Diag%PM25ni                              => NULL()
     State_Diag%Archive_PM25ni                      = .FALSE.
@@ -6363,6 +6369,25 @@ CONTAINS
             TaggedDiagList = TaggedDiag_List,                                &
             Ptr2Data       = State_Diag%RO2concAfterChem,                    &
             archiveData    = State_Diag%Archive_RO2concAfterChem,            &
+            diagId         = diagId,                                         &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       diagID  = 'NIThvEF'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%NIThvEF         ,                    &
+            archiveData    = State_Diag%Archive_NIThvEF         ,            &
             diagId         = diagId,                                         &
             RC             = RC                                             )
 
@@ -11977,6 +12002,11 @@ CONTAINS
                    RC       = RC                                            )
     IF ( RC /= GC_SUCCESS ) RETURN
 
+    CALL Finalize( diagId   = 'NIThvEF',                             &
+                   Ptr2Data = State_Diag%NIThvEF         ,                    &
+                   RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
     CALL Finalize( diagId   = 'PM25ni',                                      &
                    Ptr2Data = State_Diag%PM25ni,                             &
                    RC       = RC                                            )
@@ -12932,6 +12962,11 @@ CONTAINS
     ELSE IF ( TRIM( Name_AllCaps ) == 'RO2CONCAFTERCHEM' ) THEN
        IF ( isDesc    ) Desc  = 'Peroxy radical concentration immediately after chemistry'
        IF ( isUnits   ) Units = 'molec cm-3'
+       IF ( isRank    ) Rank  = 3
+
+    ELSE IF ( TRIM( Name_AllCaps ) == 'NITHVEF' ) THEN
+       IF ( isDesc    ) Desc  = 'Nitrate photolysis fine mode aerosol enhancement factor EF'
+       IF ( isUnits   ) Units = '1'
        IF ( isRank    ) Rank  = 3
 #endif
 

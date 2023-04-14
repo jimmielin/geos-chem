@@ -5354,6 +5354,11 @@ CONTAINS
        ! Set FRAC_NIT to a minimum of 0.1
        FAC        = MAX( 0.1e+0_fp, FAC )
 
+       ! Save the enhancement factor as a diagnostic (hplin, 4/13/23)
+       IF ( State_Diag%Archive_NIThvEF ) THEN
+          State_Diag%NIThvEF(I,J,L) = FAC
+       ENDIF
+
        JscaleNITs = Input_Opt%hvAerNIT_JNITs
        JscaleNIT  = Input_Opt%hvAerNIT_JNIT
 
