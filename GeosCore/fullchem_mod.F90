@@ -977,12 +977,13 @@ CONTAINS
        !      ! Br + O3 = BrO + O2 to             168
        !      ! CH3Br + OH = Br + H2O + HO2       190
        !      RCONST(168:190) = 0.0d0
+       !      ! OH + Cl2 = HOCl + Cl              243
+       !      ! CH4 + Cl = HCl + MO2              261
+       !      ! Br + PRPE = HBr + PO2             304
+       !      RCONST(243:304) = 0.0d0
        !      ! I + NO = INO                      305
        !      ! CH3I + OH = H2O + I + MO2         335
        !      RCONST(305:335) = 0.0d0
-       !      ! CH4 + Cl = HCl + MO2              261
-       !      ! Br + PRPE = HBr + PO2             304
-       !      RCONST(261:304) = 0.0d0
        ! ENDIF
 
        ! Stop timer
