@@ -118,10 +118,10 @@ CONTAINS
     !=======================================================================
 
     ! Initialize
-    RC = GC_SUCCESS
-    notDryRun = ( .not. Input_Opt%DryRun )
-    ErrMsg = ''
-    ThisLoc = ' -> at Init_Photolysis  (in module GeosCore/photolysis_mod.F90)'
+    RC      = GC_SUCCESS
+    ErrMsg  = ''
+    ThisLoc = &
+      ' -> at Init_Photolysis  (in module GeosCore/photolysis_mod.F90)'
 
     ! Set pointers
     GC_Photo_ID => State_Chm%Phot%GC_Photo_ID
@@ -162,10 +162,10 @@ CONTAINS
 #endif
    ENDIF
 
-    !--------------------------------------------------------------------
+    !------------------------------------------------------------------------
     ! Read in AOD data even if photolysis disabled
     ! (or just print file name if in dry-run mode)
-    !--------------------------------------------------------------------
+    !------------------------------------------------------------------------
     CALL RD_AOD( Input_Opt, State_Chm, RC )
     IF ( RC /= GC_SUCCESS ) THEN
        ErrMsg = 'Error encountered in FAST-JX routine "RD_AOD"!'
@@ -173,15 +173,20 @@ CONTAINS
        RETURN
     ENDIF
 
-    ! Compute the required wavelengths in the LUT to calculate requested AOD
-    IF ( .not. Input_Opt%DryRun ) THEN
-       IF (Input_Opt%amIRoot) WRITE(6,*) 'Wavelength optics read successfully'
-       CALL CALC_AOD( Input_Opt, State_Chm, RC )
-    ENDIF
+    !------------------------------------------------------------------------
+    ! Exit without doing any computations if we are doing a dry-run
+    !------------------------------------------------------------------------
+    IF ( Input_Opt%DryRun ) RETURN
 
-    !--------------------------------------------------------------------
+    !------------------------------------------------------------------------
+    ! Compute the required wavelengths in the LUT to calculate requested AOD
+    !------------------------------------------------------------------------
+    IF (Input_Opt%amIRoot) WRITE(6,*) 'Wavelength optics read successfully'
+    CALL CALC_AOD( Input_Opt, State_Chm, RC )
+
+    !------------------------------------------------------------------------
     ! Exit if photolysis disabled (zero J-values)
-    !--------------------------------------------------------------------
+    !------------------------------------------------------------------------
     IF ( .NOT. Input_Opt%Do_Photolysis ) RETURN
 
     !--------------------------------------------------------------------
@@ -200,9 +205,9 @@ CONTAINS
        RETURN
     ENDIF
 
-    !--------------------------------------------------------------------
+    !------------------------------------------------------------------------
     ! Set up MIEDX array to interpret between GC and FJX aerosol indexing
-    !--------------------------------------------------------------------
+    !------------------------------------------------------------------------
     CALL SET_AER( Input_Opt, State_Chm, RC )
 
     !========================================================================
@@ -431,7 +436,7 @@ CONTAINS
     ENDIF
 
     ! Skip further processing if we are in dry-run mode
-    IF ( notDryRun ) THEN
+    IF (  .not. Input_Opt%DryRun ) THEN
 
        ! Define species IDs
        id_NIT  = IND_('NIT')

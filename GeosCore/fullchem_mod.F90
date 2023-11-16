@@ -37,7 +37,8 @@ MODULE FullChem_Mod
 !
   ! Species ID flags (and logicals to denote if species are present)
   INTEGER               :: id_OH,  id_HO2,  id_O3P,  id_O1D, id_CH4
-  INTEGER               :: id_PCO, id_LCH4, id_NH3
+  INTEGER               :: id_PCO, id_LCH4, id_NH3,  id_SO4
+  INTEGER               :: id_SALAAL, id_SALCAL, id_SALC, id_SALA
 #ifdef MODEL_GEOS
   INTEGER               :: id_O3
   INTEGER               :: id_A3O2, id_ATO2, id_B3O2, id_BRO2
@@ -50,7 +51,6 @@ MODULE FullChem_Mod
   INTEGER               :: id_IDHNBOO, id_IDHNDOO1, id_IDHNDOO2
   INTEGER               :: id_IHPNBOO, id_IHPNDOO, id_ICNOO, id_IDNOO
 #endif
-  INTEGER               :: id_SALAAL, id_SALCAL, id_SO4, id_SALC, id_SALA
   LOGICAL               :: ok_OH,     ok_HO2,    ok_O1D, ok_O3P
   LOGICAL               :: Failed2x
 
@@ -260,6 +260,7 @@ CONTAINS
     IF (State_Diag%Archive_ProdCOfromNMVOC) State_Diag%ProdCOfromNMVOC= 0.0_f4
     IF (State_Diag%Archive_OHreactivity   ) State_Diag%OHreactivity   = 0.0_f4
     IF (State_Diag%Archive_RxnRate        ) State_Diag%RxnRate        = 0.0_f4
+    IF (State_Diag%Archive_RxnConst       ) State_Diag%RxnConst       = 0.0_f4
     IF (State_Diag%Archive_SatDiagnRxnRate) State_Diag%SatDiagnRxnRate= 0.0_f4
     IF (State_Diag%Archive_KppDiags) THEN
        IF (State_Diag%Archive_KppIntCounts) State_Diag%KppIntCounts   = 0.0_f4
@@ -334,13 +335,6 @@ CONTAINS
                     'LXRO2H', 'LXRO2N', 'LNRO2H', 'LNRO2N' )
                 State_Chm%Species(N)%Conc(:,:,:) = 0.0_fp
           END SELECT
-       ENDIF
-
-       ! Temporary fix for CO2
-       ! CO2 is a dead species and needs to be set to zero to
-       ! match the old SMVGEAR code (mps, 6/14/16)
-       IF ( TRIM( SpcInfo%Name ) == 'CO2' ) THEN
-          State_Chm%Species(N)%Conc(:,:,:) = 0.0_fp
        ENDIF
 
        ! Free pointer
@@ -449,9 +443,7 @@ CONTAINS
     ATOL      = 1e-2_dp
 
     ! Relative tolerance
-    ! Changed to 0.5e-3 to avoid integrate errors by halogen chemistry
-    !  -- Becky Alexander & Bob Yantosca (24 Jan 2023)
-    RTOL      = 0.5e-3_dp
+    RTOL      = 0.5e-2_dp
 
     !=======================================================================
     ! %%%%% SOLVE CHEMISTRY -- This is the main KPP solver loop %%%%%
@@ -512,6 +504,9 @@ CONTAINS
     DO L = 1, State_Grid%NZ
     DO J = 1, State_Grid%NY
     DO I = 1, State_Grid%NX
+
+       ! Skip to the end of the loop if we have failed integration twice
+       IF ( Failed2x ) CYCLE
 
        !=====================================================================
        ! Initialize private loop variables for each (I,J,L)
@@ -966,7 +961,7 @@ CONTAINS
        !=====================================================================
        ! HISTORY (aka netCDF diagnostics)
        !
-       ! Archive KPP reaction rates [s-1]
+       ! Archive KPP reaction rates [molec cm-3 s-1]
        ! See gckpp_Monitor.F90 for a list of chemical reactions
        !
        ! NOTE: In KPP 2.5.0+, VAR and FIX are now private to the integrator
@@ -998,6 +993,18 @@ CONTAINS
                 State_Diag%SatDiagnRxnRate(I,J,L,S) = Aout(N)
              ENDDO
           ENDIF
+       ENDIF
+
+       ! Archive KPP reaction rate constants (RCONST). The units vary.
+       ! They are already updated in Update_RCONST, and do not require
+       ! a call of Fun(). (hplin, 3/28/23)
+       IF ( State_Diag%Archive_RxnConst ) THEN
+
+          DO S = 1, State_Diag%Map_RxnConst%nSlots
+             N = State_Diag%Map_RxnConst%slot2Id(S)
+             State_Diag%RxnConst(I,J,L,S) = RCONST(N)
+          ENDDO
+
        ENDIF
 
        !=====================================================================
@@ -1213,8 +1220,11 @@ CONTAINS
           ! Exit upon the second failure
           !==================================================================
           IF ( IERR < 0 ) THEN
+
+             ! Print error message
              WRITE(6,     '(a   )' ) '## INTEGRATE FAILED TWICE !!! '
              WRITE(ERRMSG,'(a,i3)' ) 'Integrator error code :', IERR
+
 #if defined( MODEL_GEOS ) || defined( MODEL_WRF )
              IF ( Input_Opt%KppStop ) THEN
                 CALL ERROR_STOP(ERRMSG, 'INTEGRATE_KPP')
@@ -1228,29 +1238,37 @@ CONTAINS
                 State_Diag%KppError(I,J,L) = State_Diag%KppError(I,J,L) + 1.0
              ENDIF
 #else
+             !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+             ! Make sure only one thread at a time executes this block
+             !$OMP CRITICAL
+             !
              ! Set a flag to break out of loop gracefully
              ! NOTE: You can set a GDB breakpoint here to examine the error
-             !$OMP CRITICAL
              Failed2x = .TRUE.
 
-             ! Print concentrations at trouble box KPP error
-             PRINT*, REPEAT( '###', 79 )
+             ! Print concentrations at failure grid box
+             PRINT*, REPEAT( '#', 79 )
              PRINT*, '### KPP DEBUG OUTPUT!'
              PRINT*, '### Species concentrations at problem box ', I, J, L
-             PRINT*, REPEAT( '###', 79 )
+             PRINT*, REPEAT( '#', 79 )
              DO N = 1, NSPEC
-                PRINT*, '### ', C(N), TRIM( ADJUSTL( SPC_NAMES(N) ) )
+                PRINT*, C(N), TRIM( ADJUSTL( SPC_NAMES(N) ) )
              ENDDO
 
-             ! Print rate constants at trouble box KPP error
-             PRINT*, REPEAT( '###', 79 )
+             ! Print rate constants at failure grid box
+             PRINT*, REPEAT( '#', 79 )
              PRINT*, '### KPP DEBUG OUTPUT!'
              PRINT*, '### Reaction rates at problem box ', I, J, L
-             PRINT*, REPEAT( '###', 79 )
+             PRINT*, REPEAT( '#', 79 )
              DO N = 1, NREACT
                 PRINT*, RCONST(N), TRIM( ADJUSTL( EQN_NAMES(N) ) )
              ENDDO
+             !
              !$OMP END CRITICAL
+             !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+             ! Start skipping to end of loop upon 2 failures in a row
+             CYCLE
 #endif
           ENDIF
 
@@ -1273,8 +1291,8 @@ CONTAINS
        ! file at startup (see above).
        State_Chm%KPPHvalue(I,J,L) = RSTATE(Nhnew)
 
-       ! Save cpu time spent for bulk of KPP-related routines for History archival
-       ! (hplin, 11/8/21)
+       ! Save cpu time spent for bulk of KPP-related routines for 
+       ! History archival (hplin, 11/8/21)
        IF ( State_Diag%Archive_KppTime ) THEN
           call cpu_time(TimeEnd)
           State_Diag%KppTime(I,J,L) = TimeEnd - TimeStart
@@ -2609,11 +2627,11 @@ CONTAINS
     id_O3P      = Ind_( 'O'            )
     id_O1D      = Ind_( 'O1D'          )
     id_OH       = Ind_( 'OH'           )
+    id_SO4      = Ind_( 'SO4'          )
     id_SALA     = Ind_( 'SALA'         )
     id_SALAAL   = Ind_( 'SALAAL'       )
     id_SALC     = Ind_( 'SALC'         )
     id_SALCAL   = Ind_( 'SALCAL'       )
-    id_SO4      = Ind_( 'SO4'          )
 
 #ifdef MODEL_GEOS
     ! ckeller
