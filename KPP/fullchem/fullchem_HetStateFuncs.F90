@@ -238,9 +238,6 @@ CONTAINS
     ! ... check if there is surface NAT at this grid box
     H%natSurface = ( H%pscBox .and. ( C(ind_NIT) > 0.0_dp )                 )
 
-    ! Flag to turn off heterogeneous reactions in stratosphere
-    H%TurnOffHetRates = Input_Opt%TurnOffHetRates
-
   END SUBROUTINE FullChem_SetStateHet
 !EOC
 !------------------------------------------------------------------------------
@@ -463,11 +460,7 @@ CONTAINS
     !=======================================================================
     ! Fraction of SALACL in total fine sea salt
     !=======================================================================
-    IF ((  C(ind_SALACL) + C(ind_NIT) + C(ind_SO4)) > 0.0_dp) THEN
-       H%frac_SALACL = C(ind_SALACL) / ( C(ind_SALACL) + C(ind_NIT) + C(ind_SO4) )
-    ELSE 
-       H%frac_SALACL = 0.0_dp
-    ENDIF
+    H%frac_SALACL = C(ind_SALACL) / ( C(ind_SALACL) + C(ind_NIT) + C(ind_SO4) )
 
   END SUBROUTINE Halide_Conc
 !EOC

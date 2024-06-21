@@ -13,7 +13,7 @@
   ! Species molecular weight [g/mole]
   REAL(dp) :: MW(NSPEC)
 
-  ! Square root of species molecular weight [g/mole]^1/2
+  ! Square root of species molecular weight [g/mole]
   REAL(dp) :: SR_MW(NSPEC)
 
   ! Henry's law constants
@@ -44,15 +44,14 @@
   REAL(dp) :: NUMDEN
   !$OMP THREADPRIVATE( NUMDEN )
 
-  ! Pressure [hPa]
+  ! Pressure and relative humidity
   REAL(dp) :: PRESS
   !$OMP THREADPRIVATE( PRESS )
 
-  ! Relative humidity [%]
   REAL(dp) :: RELHUM
   !$OMP THREADPRIVATE( RELHUM )
 
-  ! Cosine of solar zenith angle [unitless]
+  ! Cosine of solar zenith angle
   REAL(dp) :: SUNCOS
   !$OMP THREADPRIVATE( SUNCOS )
 
@@ -60,7 +59,7 @@
   ! Rate array variables (used by more than one mechanism)
   !=========================================================================
 
-  ! Photolysis rates [1/s] (increase size if necessary)
+  ! Photolysis rates (increase size if necessary)
   ! Used by fullchem and Hg mechanisms
   REAL(dp) :: PHOTOL(200)
   !$OMP THREADPRIVATE( PHOTOL )
@@ -81,7 +80,7 @@
   REAL(dp) :: EIGHT_RSTARG_T
   !$OMP THREADPRIVATE( EIGHT_RSTARG_T )
 
-  ! H2O concentration [molec/cm3]
+  ! H2O concentration
   REAL(dp) :: H2O
   !$OMP THREADPRIVATE( H2O )
 
@@ -203,11 +202,6 @@
      LOGICAL  :: cloudBox       ! Are we in a box with cloud?
      REAL(dp) :: fracOrgAer     ! Fraction of organic aerosol [1]
      REAL(dp) :: fracInorgAer   ! Fraction of organic aerosol [1]
-     !
-     ! Additional fields for GEOS runs
-     !    
-     LOGICAL  :: TurnOffHetRates ! Turn off heterogeneous reactions in stratosphere?
-
   END TYPE HetState
   TYPE(HetState), TARGET, PUBLIC :: State_Het
   !$OMP THREADPRIVATE( State_Het )
@@ -216,14 +210,13 @@
   ! Variables specific to the carbon mechanism
   !==========================================================================
 
-  ! Array for strat CH4/CO/CO2 rates [1/s]
+  ! Array for strat CH4/CO/CO2 rates
   REAL(dp) :: K_STRAT(5)
   !$OMP THREADPRIVATE( K_STRAT )
 
-  ! Array for trop CH4/CO/CO2 rates [1/s]
+  ! Array for trop CH4/CO/CO2 rates
   REAL(dp) :: K_TROP(5)
   !$OMP THREADPRIVATE( K_TROP )
 
-  ! Are we in the tropopshere (1=yes, 0=no)
   REAL(dp) :: TROP
   !$OMP THREADPRIVATE( TROP )

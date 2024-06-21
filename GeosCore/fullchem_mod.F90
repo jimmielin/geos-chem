@@ -875,6 +875,9 @@ CONTAINS
        ! ewl debug
        if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
           print *, "ewl do_fullchem, F5: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+
+          ! hplin debug
+          print *, "hplin after Set_Kpp_GridBox_Values", SUNCOS, NUMDEN, H2O, PRESS, TEMP
        endif
 
        
@@ -986,6 +989,13 @@ CONTAINS
 
        ! Update the array of rate constants
        CALL Update_RCONST( )
+
+       ! hplin debug: check which rates are problematic.
+       RCONST(1:12) = 0.0_dp ! seasalt, cloud, hms sulfur chem rxns.
+       ! some basic O3, OH, etc. 13:23
+       RCONST(24:636) = 0.0_dp
+       ! RCONST(637:737) = 0.0_dp ! het chem
+       ! RCONST(738:894) = 0.0_dp ! phot chem
 
        !=====================================================================
        ! HISTORY (aka netCDF diagnostics)
