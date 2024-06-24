@@ -49,6 +49,7 @@ operations:
      use_non_local_pbl: true
 
   photolysis:
+    activate: true
     input_dir: {DATA_ROOT}/CHEM_INPUTS/FAST_JX/v2020-10/
     overhead_O3:
       use_online_O3_from_model: true
