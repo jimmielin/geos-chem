@@ -3904,8 +3904,6 @@ CONTAINS
     USE State_Chm_Mod,      ONLY : ChmState
 #if defined( MODEL_CESM )
     USE UNITS,              ONLY : freeUnit
-    USE CAM_ABORTUTILS,     ONLY : endrun
-    USE SPMD_UTILS,         ONLY : mpicom, masterprocid, mpi_success, mpi_real8
 #endif
 !
 ! !INPUT PARAMETERS:
@@ -3931,10 +3929,6 @@ CONTAINS
     INTEGER            :: I, AS, IOS
     INTEGER            :: IMON, ITRAC, ILEV
     INTEGER            :: IU_FILE
-#if defined( MODEL_CESM )
-    INTEGER            :: nSize ! Number of elements in State_Chm%NOXCOEFF
-    INTEGER            :: ierr
-#endif
 
     ! Strings
     CHARACTER(LEN=255) :: NOX_FILE
@@ -4058,7 +4052,6 @@ CONTAINS
     State_Chm%NOXCOEFF = 0.0e+0_fp
 
 #if defined( MODEL_CESM )
-    nSize = State_Chm%JJNOXCOEFF * UCX_NLEVS * 6 * 12
     IF ( Input_Opt%amIRoot ) THEN
 #endif
     ! Fill array
@@ -4139,8 +4132,6 @@ CONTAINS
     ENDDO !IMON
 #if defined( MODEL_CESM )
     ENDIF
-
-    IF ( ierr /= mpi_success ) CALL endrun(subname//': MPI_BCAST ERROR: NOXCOEFF')
 #endif
 
   END SUBROUTINE NOXCOEFF_INIT
