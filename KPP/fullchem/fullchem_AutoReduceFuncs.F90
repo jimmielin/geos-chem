@@ -212,6 +212,7 @@ CONTAINS
     USE Input_Opt_Mod, ONLY : OptInput
     USE State_Chm_Mod, ONLY : ChmState
     USE State_Met_Mod, ONLY : MetState
+    USE TIME_MOD,                 ONLY : GET_TS_CHEM
 !
 ! !INPUT PARAMETERS: 
 !
@@ -283,7 +284,8 @@ CONTAINS
     ! Initialize Hstart (the starting value of the integration step
     ! size with the value of Hnew (the last predicted but not yet 
     ! taken timestep)  saved to the the restart file.
-    RCNTRL(3) = State_Chm%KPPHvalue(I,J,L)
+    ! RCNTRL(3) = State_Chm%KPPHvalue(I,J,L)
+    RCNTRL(3) = GET_TS_CHEM() ! [s]
 
     !---------------------------------------------------------------------
     ! Auto-reduce threshold, Method 1: Pressure-dependent
