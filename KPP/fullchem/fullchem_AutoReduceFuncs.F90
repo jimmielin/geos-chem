@@ -49,7 +49,7 @@ CONTAINS
 !
     USE gckpp_Precision
     USE gckpp_Parameters
-    USE gckpp_Global,    ONLY : keepSpcActive
+    !USE gckpp_Global,    ONLY : keepSpcActive
 !
 ! !INPUT PARAMETERS:
 !
@@ -65,46 +65,46 @@ CONTAINS
 
     ! New halogens auto-reduce list hplin 01/27/22, 03/02/22
     ! based off Shen et al. 2020 GMD Table 1, lines 10, 11, 12
-    keepSpcActive(ind_AERI  ) = .TRUE.  ! Iodine on aerosol
-    keepSpcActive(ind_Br    ) = .TRUE.
-    keepSpcActive(ind_Br2   ) = .TRUE.
-    keepSpcActive(ind_BrCl  ) = .TRUE.
-    keepSpcActive(ind_BrNO2 ) = .TRUE.
-    keepSpcActive(ind_BrNO3 ) = .TRUE.
-    keepSpcActive(ind_BrO   ) = .TRUE.
-    keepSpcActive(ind_BrSALA) = .TRUE.
-    keepSpcActive(ind_BrSALC) = .TRUE.
-    keepSpcActive(ind_HBr   ) = .TRUE.
-    keepSpcActive(ind_HOBr  ) = .TRUE.
-    keepSpcActive(ind_Cl    ) = .TRUE.
-    keepSpcActive(ind_Cl2   ) = .TRUE.
-    keepSpcActive(ind_Cl2O2 ) = .TRUE.
-    keepSpcActive(ind_ClNO2 ) = .TRUE.
-    keepSpcActive(ind_ClNO3 ) = .TRUE.
-    keepSpcActive(ind_ClO   ) = .TRUE.
-    keepSpcActive(ind_ClOO  ) = .TRUE.
-    keepSpcActive(ind_OClO  ) = .TRUE.
-    keepSpcActive(ind_HCl   ) = .TRUE.
-    keepSpcActive(ind_HOCl  ) = .TRUE.
-    keepSpcActive(ind_I     ) = .TRUE.
-    keepSpcActive(ind_I2    ) = .TRUE.
-    keepSpcActive(ind_IO    ) = .TRUE.
-    keepSpcActive(ind_I2O2  ) = .TRUE.
-    keepSpcActive(ind_HI    ) = .TRUE.
-    keepSpcActive(ind_ISALA ) = .TRUE.
-    keepSpcActive(ind_ISALC ) = .TRUE.
-    keepSpcActive(ind_I2O4  ) = .TRUE.
-    keepSpcActive(ind_I2O3  ) = .TRUE.
-    keepSpcActive(ind_INO   ) = .TRUE.
-    keepSpcActive(ind_IONO  ) = .TRUE.
-    keepSpcActive(ind_IONO2 ) = .TRUE.
-    keepSpcActive(ind_ICl   ) = .TRUE.
-    keepSpcActive(ind_IBr   ) = .TRUE.
-    keepSpcActive(ind_HOI   ) = .TRUE.
-    keepSpcActive(ind_SALACl) = .TRUE.
-    keepSpcActive(ind_SALCCl) = .TRUE.
-    keepSpcActive(ind_SALAAL) = .TRUE.
-    keepSpcActive(ind_SALCAL) = .TRUE.
+    ! keepSpcActive(ind_AERI  ) = .TRUE.  ! Iodine on aerosol
+    ! keepSpcActive(ind_Br    ) = .TRUE.
+    ! keepSpcActive(ind_Br2   ) = .TRUE.
+    ! keepSpcActive(ind_BrCl  ) = .TRUE.
+    ! keepSpcActive(ind_BrNO2 ) = .TRUE.
+    ! keepSpcActive(ind_BrNO3 ) = .TRUE.
+    ! keepSpcActive(ind_BrO   ) = .TRUE.
+    ! keepSpcActive(ind_BrSALA) = .TRUE.
+    ! keepSpcActive(ind_BrSALC) = .TRUE.
+    ! keepSpcActive(ind_HBr   ) = .TRUE.
+    ! keepSpcActive(ind_HOBr  ) = .TRUE.
+    ! keepSpcActive(ind_Cl    ) = .TRUE.
+    ! keepSpcActive(ind_Cl2   ) = .TRUE.
+    ! keepSpcActive(ind_Cl2O2 ) = .TRUE.
+    ! keepSpcActive(ind_ClNO2 ) = .TRUE.
+    ! keepSpcActive(ind_ClNO3 ) = .TRUE.
+    ! keepSpcActive(ind_ClO   ) = .TRUE.
+    ! keepSpcActive(ind_ClOO  ) = .TRUE.
+    ! keepSpcActive(ind_OClO  ) = .TRUE.
+    ! keepSpcActive(ind_HCl   ) = .TRUE.
+    ! keepSpcActive(ind_HOCl  ) = .TRUE.
+    ! keepSpcActive(ind_I     ) = .TRUE.
+    ! keepSpcActive(ind_I2    ) = .TRUE.
+    ! keepSpcActive(ind_IO    ) = .TRUE.
+    ! keepSpcActive(ind_I2O2  ) = .TRUE.
+    ! keepSpcActive(ind_HI    ) = .TRUE.
+    ! keepSpcActive(ind_ISALA ) = .TRUE.
+    ! keepSpcActive(ind_ISALC ) = .TRUE.
+    ! keepSpcActive(ind_I2O4  ) = .TRUE.
+    ! keepSpcActive(ind_I2O3  ) = .TRUE.
+    ! keepSpcActive(ind_INO   ) = .TRUE.
+    ! keepSpcActive(ind_IONO  ) = .TRUE.
+    ! keepSpcActive(ind_IONO2 ) = .TRUE.
+    ! keepSpcActive(ind_ICl   ) = .TRUE.
+    ! keepSpcActive(ind_IBr   ) = .TRUE.
+    ! keepSpcActive(ind_HOI   ) = .TRUE.
+    ! keepSpcActive(ind_SALACl) = .TRUE.
+    ! keepSpcActive(ind_SALCCl) = .TRUE.
+    ! keepSpcActive(ind_SALAAL) = .TRUE.
+    ! keepSpcActive(ind_SALCAL) = .TRUE.
 
   END SUBROUTINE fullchem_AR_KeepHalogensActive
 !EOC
@@ -126,7 +126,7 @@ CONTAINS
 ! !USES:
 !
     USE gckpp_Precision
-    USE gckpp_Global, ONLY : keepActive
+    !USE gckpp_Global, ONLY : keepActive
 !
 ! !INPUT PARAMETERS: 
 !
@@ -134,7 +134,7 @@ CONTAINS
 !EOP
 !------------------------------------------------------------------------------
 !BOC
-    keepActive = option
+    !keepActive = option
 
   END SUBROUTINE fullchem_AR_SetKeepActive
 !EOC
@@ -155,8 +155,8 @@ CONTAINS
 ! !USES:
 !
     USE gckpp_Precision
-    USE gckpp_Global,     ONLY : cNONZERO, rNVAR
-    USE gckpp_Integrator, ONLY : NARthr
+    !USE gckpp_Global,     ONLY : cNONZERO, rNVAR
+    !USE gckpp_Integrator, ONLY : NARthr
     USE State_Diag_Mod,   ONLY : DgnState
 !
 ! !INPUT PARAMETERS: 
@@ -170,20 +170,20 @@ CONTAINS
 !EOP
 !------------------------------------------------------------------------------
 !BOC
-    ! # of species in auto-reduced mechanism
-    IF ( State_Diag%Archive_KppAutoReducerNVAR ) THEN
-       State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
-    ENDIF
+    ! ! # of species in auto-reduced mechanism
+    ! IF ( State_Diag%Archive_KppAutoReducerNVAR ) THEN
+    !    State_Diag%KppAutoReducerNVAR(I,J,L) = rNVAR
+    ! ENDIF
 
-    ! Computed threshold
-    IF ( State_Diag%Archive_KppAutoReduceThres ) THEN
-       State_Diag%KppAutoReduceThres(I,J,L) = RSTATE(NARthr)
-    ENDIF
+    ! ! Computed threshold
+    ! IF ( State_Diag%Archive_KppAutoReduceThres ) THEN
+    !    State_Diag%KppAutoReduceThres(I,J,L) = RSTATE(NARthr)
+    ! ENDIF
 
-    ! # of nonzero elements in LU factorization of Jacobian, AR only
-    IF ( State_Diag%Archive_KppcNONZERO ) THEN
-       State_Diag%KppcNONZERO(I,J,L) = cNONZERO
-    ENDIF
+    ! ! # of nonzero elements in LU factorization of Jacobian, AR only
+    ! IF ( State_Diag%Archive_KppcNONZERO ) THEN
+    !    State_Diag%KppcNONZERO(I,J,L) = cNONZERO
+    ! ENDIF
 
   END SUBROUTINE fullchem_AR_UpdateKppDiags
 !EOC
