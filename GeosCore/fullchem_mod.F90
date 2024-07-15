@@ -37,14 +37,13 @@ MODULE FullChem_Mod
 !
   ! Species ID flags (and logicals to denote if species are present)
   INTEGER               :: id_OH,  id_HO2,  id_O3P,  id_O1D, id_CH4
-  INTEGER               :: id_PCO, id_LCH4, id_NH3,  id_SO4
+  INTEGER               :: id_PCO, id_LCH4, id_NH3,  id_SO4, id_O3
   INTEGER               :: id_SALAAL, id_SALCAL, id_SALC, id_SALA
   INTEGER               :: id_PSO4
 #ifdef TOMAS
   INTEGER               :: id_NK05, id_NK08, id_NK10, id_NK20
 #endif
 #ifdef MODEL_GEOS
-  INTEGER               :: id_O3
   INTEGER               :: id_A3O2, id_ATO2, id_B3O2, id_BRO2
   INTEGER               :: id_ETO2, id_LIMO2, id_MO2, id_PIO2, id_PO2
   INTEGER               :: id_PRN1, id_R4N1, id_R4O2, id_TRO2, id_XRO2
@@ -61,6 +60,9 @@ MODULE FullChem_Mod
   INTEGER               :: id_TSOG0, id_TSOG1, id_TSOG2, id_TSOG3
   INTEGER               :: id_ASOG1, id_ASOG2, id_ASOG3
   INTEGER               :: id_NIT, id_SO4s, id_NITs, id_HNO3
+
+  ! For tagged O3S tracer similar to CAM-chem
+  INTEGER               :: id_O3S
 #endif
   LOGICAL               :: ok_OH, ok_HO2, ok_O1D, ok_O3P
   LOGICAL               :: Failed2x
@@ -1335,6 +1337,31 @@ CONTAINS
           write(*,*) "H2SO4_PRDR negative in fullchem_mod.F90!!", &
                I, J, L, "was:", State_Chm%H2SO4_PRDR(I,J,L), "  setting to 0.0d0"
           State_Chm%H2SO4_PRDR(I,J,L) = 0.0d0
+       ENDIF
+
+       !--------------------------------------------------------------------
+       ! Update tagged stratospheric ozone ("O3S") tracer in CESM
+       ! In the stratosphere, set O3S to O3 concentration
+       ! In the troposphere, destroy O3S at same *rate* as O3
+       !  -> C(ind_LO3) is every molecule of O3 destroyed in chem; has to be attributed prop to strat-tracer O3
+       !
+       ! At this point, C has already been copied back to State_Chm.
+       ! For clarity, operate directly on State_Chm array (fp). (hplin, 7/15/24)
+       !--------------------------------------------------------------------
+       IF ( .not. State_Met%InTroposphere(I,J,L) ) THEN
+          State_Chm%Species(id_O3S)%Conc(I,J,L) = State_Chm%Species(id_O3)%Conc(I,J,L)
+       ELSE
+          State_Chm%Species(id_O3S)%Conc(I,J,L) = &
+             State_Chm%Species(id_O3S)%Conc(I,J,L) - &
+             ( C(ind_LO3) * (State_Chm%Species(id_O3S)%Conc(I,J,L) / C_before_integrate(ind_O3) ) )
+       ENDIF
+
+       ! For debugging
+       IF ( State_Chm%Species(id_O3S)%Conc(I,J,L) < 0.0d0) THEN
+          write(*,*) "O3S negative in fullchem_mod.F90!!", &
+               I, J, L, "was:", State_Chm%Species(id_O3S)%Conc(I,J,L), " tot loss ", C(ind_LO3), &
+               "prop loss", ( C(ind_LO3) * (State_Chm%Species(id_O3S)%Conc(I,J,L) / C_before_integrate(ind_O3) ) ),  " setting to 0.0d0"
+          State_Chm%Species(id_O3S)%Conc(I,J,L) = 0.0d0
        ENDIF
 #endif
 
@@ -2729,6 +2756,7 @@ CONTAINS
     id_O3P      = Ind_( 'O'            )
     id_O1D      = Ind_( 'O1D'          )
     id_OH       = Ind_( 'OH'           )
+    id_O3       = Ind_( 'O3'           )
     id_SO4      = Ind_( 'SO4'          )
     id_SALA     = Ind_( 'SALA'         )
     id_SALAAL   = Ind_( 'SALAAL'       )
@@ -2743,7 +2771,6 @@ CONTAINS
 
 #ifdef MODEL_GEOS
     ! ckeller
-    id_O3       = Ind_( 'O3'           )
     id_A3O2     = Ind_( 'A3O2'         )
     id_ATO2     = Ind_( 'ATO2'         )
     id_BRO2     = Ind_( 'BRO2'         )
@@ -2803,6 +2830,7 @@ CONTAINS
     id_SO4s     = Ind_('SO4s')
     id_NITs     = Ind_('NITs')
     id_HNO3     = Ind_('HNO3')
+    id_O3S      = Ind_('O3S')
 #endif
 
     ! Set flags to denote if each species is defined

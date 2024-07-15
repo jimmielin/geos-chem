@@ -3576,6 +3576,13 @@ O3:
   Henry_CR: 2800.0
   Henry_K0: 0.0101325e0
   Is_DryAlt: true
+O3S:
+  << : *O3properties
+  Background_VV: 1.0e-20
+  FullName: Ozone transported from the stratosphere CESM only
+  Henry_CR: 2800.0
+  Henry_K0: 0.0101325e0
+  Is_DryAlt: true
 O3afbl:
   << : *O3properties
   Background_VV: 1.0e-20
