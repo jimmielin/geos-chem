@@ -261,7 +261,8 @@ CONTAINS
     ! = 3 :  method is  Ros4
     ! = 4 :  method is  Rodas3
     ! = 5:   method is  Rodas4
-    ICNTRL(3) = 4
+    ! For Backward Euler (beuler), use 6.
+    ICNTRL(3) = 6
 
     ! 0 - adjoint, 1 - no adjoint
     ICNTRL(7) = 1
