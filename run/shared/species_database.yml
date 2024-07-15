@@ -2810,6 +2810,10 @@ LOx:
   FullName: Dummy species to track loss rate of Ox
   Is_Gas: true
   MW_g: 48.00
+LO3:
+  FullName: Dummy species to track loss rate of O3 for CESM tagged tracer
+  Is_Gas: true
+  MW_g: 48.00
 LTRO2H:
   FullName: Dummy species to track oxidation of TRO2 by HO2
   Is_Gas: true
