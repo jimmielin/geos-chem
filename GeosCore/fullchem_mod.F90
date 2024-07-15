@@ -936,9 +936,11 @@ CONTAINS
        ! and point to C.  Therefore, pass C(1:NVAR) instead of VAR and
        ! C(NVAR+1:NSPEC) instead of FIX to routine FUN.
        !=====================================================================
+#if !defined( MODEL_CESM )
        IF ( State_Diag%Archive_RxnRate                                  .or. &
             State_Diag%Archive_SatDiagnRxnRate                        ) THEN
-  
+#endif
+
           ! Get equation rates (Aout)
           CALL Fun( V       = C(1:NVAR),                                     &
                     F       = C(NVAR+1:NSPEC),                               &
@@ -973,7 +975,9 @@ CONTAINS
              State_Diag%RxnConst(I,J,L,S) = RCONST(N)
           ENDDO
 
+#if !defined( MODEL_CESM )
        ENDIF
+#endif
 
        !=====================================================================
        ! Set options for the KPP integrator in vectors ICNTRL and RCNTRL
@@ -1343,7 +1347,8 @@ CONTAINS
        ! Update tagged stratospheric ozone ("O3S") tracer in CESM
        ! In the stratosphere, set O3S to O3 concentration
        ! In the troposphere, destroy O3S at same *rate* as O3
-       !  -> C(ind_LO3) is every molecule of O3 destroyed in chem; has to be attributed prop to strat-tracer O3
+       !  -> Vloc(ind_LO3) is loss-terms-only of O3 but using [O3] concentrations.
+       !     remap it to [O3S] to create equivalent loss-rate for tagged strat O3.
        !
        ! At this point, C has already been copied back to State_Chm.
        ! For clarity, operate directly on State_Chm array (fp). (hplin, 7/15/24)
@@ -1352,17 +1357,11 @@ CONTAINS
           State_Chm%Species(id_O3S)%Conc(I,J,L) = State_Chm%Species(id_O3)%Conc(I,J,L)
        ELSE
           State_Chm%Species(id_O3S)%Conc(I,J,L) = &
-             State_Chm%Species(id_O3S)%Conc(I,J,L) - &
-             ( C(ind_LO3) * (State_Chm%Species(id_O3S)%Conc(I,J,L) / C_before_integrate(ind_O3) ) )
+             C_before_integrate(id_O3S) * exp((-1) * DT * Vloc(ind_LO3) / C_before_integrate(ind_O3) * C_before_integrate(id_O3S))
        ENDIF
 
        ! For debugging
-       IF ( State_Chm%Species(id_O3S)%Conc(I,J,L) < 0.0d0) THEN
-          write(*,*) "O3S negative in fullchem_mod.F90!!", &
-               I, J, L, "was:", State_Chm%Species(id_O3S)%Conc(I,J,L), " tot loss ", C(ind_LO3), &
-               "prop loss", ( C(ind_LO3) * (State_Chm%Species(id_O3S)%Conc(I,J,L) / C_before_integrate(ind_O3) ) ),  " setting to 0.0d0"
-          State_Chm%Species(id_O3S)%Conc(I,J,L) = 0.0d0
-       ENDIF
+       write(6,*) "O3S: at ", I, J, L, " was ", C_before_integrate(id_O3S), " now ", State_Chm%Species(id_O3S)%Conc(I,J,L)
 #endif
 
 #ifdef MODEL_GEOS
