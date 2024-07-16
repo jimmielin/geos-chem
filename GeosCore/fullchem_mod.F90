@@ -937,6 +937,8 @@ CONTAINS
        ! C(NVAR+1:NSPEC) instead of FIX to routine FUN.
        !=====================================================================
 #if !defined( MODEL_CESM )
+       ! Compute Aout equation rates only if history output is needed,
+       ! or always for CESM (hplin, 7/15/24)
        IF ( State_Diag%Archive_RxnRate                                  .or. &
             State_Diag%Archive_SatDiagnRxnRate                        ) THEN
 #endif
@@ -963,7 +965,9 @@ CONTAINS
                 State_Diag%SatDiagnRxnRate(I,J,L,S) = Aout(N)
              ENDDO
           ENDIF
+#if !defined( MODEL_CESM )
        ENDIF
+#endif
 
        ! Archive KPP reaction rate constants (RCONST). The units vary.
        ! They are already updated in Update_RCONST, and do not require
@@ -975,9 +979,7 @@ CONTAINS
              State_Diag%RxnConst(I,J,L,S) = RCONST(N)
           ENDDO
 
-#if !defined( MODEL_CESM )
        ENDIF
-#endif
 
        !=====================================================================
        ! Set options for the KPP integrator in vectors ICNTRL and RCNTRL
@@ -1352,16 +1354,17 @@ CONTAINS
        !
        ! At this point, C has already been copied back to State_Chm.
        ! For clarity, operate directly on State_Chm array (fp). (hplin, 7/15/24)
+       !
+       ! Refer to the "O3S" tagged implementation by Emmons et al. (2012),
+       ! in mo_gas_phase_chemdr.F90 in CESM (search vmr(i,troplev(i)+1:pver,o3s_ndx))
        !--------------------------------------------------------------------
        IF ( .not. State_Met%InTroposphere(I,J,L) ) THEN
           State_Chm%Species(id_O3S)%Conc(I,J,L) = State_Chm%Species(id_O3)%Conc(I,J,L)
        ELSE
+          ! O3S is not a KPP species. Its loss rate is determined by LO3 only
           State_Chm%Species(id_O3S)%Conc(I,J,L) = &
-             C_before_integrate(id_O3S) * exp((-1) * DT * Vloc(ind_LO3) / C_before_integrate(ind_O3) * C_before_integrate(id_O3S))
+             State_Chm%Species(id_O3S)%Conc(I,J,L) * exp((-1) * DT * Vloc(ind_LO3) / C_before_integrate(ind_O3))
        ENDIF
-
-       ! For debugging
-       write(6,*) "O3S: at ", I, J, L, " was ", C_before_integrate(id_O3S), " now ", State_Chm%Species(id_O3S)%Conc(I,J,L)
 #endif
 
 #ifdef MODEL_GEOS
