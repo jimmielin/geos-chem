@@ -18,6 +18,7 @@ LCO : CO;
 PSO4 : SO4;
 LCH4 : CH4;
 PH2O2 : H2O2;
+LO3 : O3;
 
 #INLINE F90_RATES
   ! All rates are included in fullchem_RateLawFuncs.F90, which

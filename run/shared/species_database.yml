@@ -3576,6 +3576,20 @@ O3:
   Henry_CR: 2800.0
   Henry_K0: 0.0101325e0
   Is_DryAlt: true
+O3S:
+  << : *O3properties
+  Background_VV: 2.0e-8
+  FullName: Ozone stratosphere tag CESM
+  Henry_CR: 2800.0
+  Henry_K0: 0.0101325e0
+  Is_DryAlt: true
+LO3:
+  << : *O3properties
+  Background_VV: 2.0e-8
+  FullName: Ozone loss dummy tracer CESM
+  Henry_CR: 2800.0
+  Henry_K0: 0.0101325e0
+  Is_DryAlt: true
 O3afbl:
   << : *O3properties
   Background_VV: 1.0e-20
