@@ -40,11 +40,11 @@ MODULE FullChem_Mod
   INTEGER               :: id_PCO, id_LCH4, id_NH3,  id_SO4
   INTEGER               :: id_SALAAL, id_SALCAL, id_SALC, id_SALA
   INTEGER               :: id_PSO4
+  INTEGER               :: id_O3
 #ifdef TOMAS
   INTEGER               :: id_NK05, id_NK08, id_NK10, id_NK20
 #endif
 #ifdef MODEL_GEOS
-  INTEGER               :: id_O3
   INTEGER               :: id_A3O2, id_ATO2, id_B3O2, id_BRO2
   INTEGER               :: id_ETO2, id_LIMO2, id_MO2, id_PIO2, id_PO2
   INTEGER               :: id_PRN1, id_R4N1, id_R4O2, id_TRO2, id_XRO2
@@ -61,6 +61,7 @@ MODULE FullChem_Mod
   INTEGER               :: id_TSOG0, id_TSOG1, id_TSOG2, id_TSOG3
   INTEGER               :: id_ASOG1, id_ASOG2, id_ASOG3
   INTEGER               :: id_NIT, id_SO4s, id_NITs, id_HNO3
+  INTEGER               :: id_O3S
 #endif
   LOGICAL               :: ok_OH, ok_HO2, ok_O1D, ok_O3P
   LOGICAL               :: Failed2x
@@ -934,9 +935,11 @@ CONTAINS
        ! and point to C.  Therefore, pass C(1:NVAR) instead of VAR and
        ! C(NVAR+1:NSPEC) instead of FIX to routine FUN.
        !=====================================================================
+#if !defined( MODEL_CESM )
        IF ( State_Diag%Archive_RxnRate                                  .or. &
             State_Diag%Archive_SatDiagnRxnRate                        ) THEN
-  
+#endif
+
           ! Get equation rates (Aout)
           CALL Fun( V       = C(1:NVAR),                                     &
                     F       = C(NVAR+1:NSPEC),                               &
@@ -959,7 +962,10 @@ CONTAINS
                 State_Diag%SatDiagnRxnRate(I,J,L,S) = Aout(N)
              ENDDO
           ENDIF
+
+#if !defined( MODEL_CESM )
        ENDIF
+#endif
 
        ! Archive KPP reaction rate constants (RCONST). The units vary.
        ! They are already updated in Update_RCONST, and do not require
@@ -1335,6 +1341,27 @@ CONTAINS
           write(*,*) "H2SO4_PRDR negative in fullchem_mod.F90!!", &
                I, J, L, "was:", State_Chm%H2SO4_PRDR(I,J,L), "  setting to 0.0d0"
           State_Chm%H2SO4_PRDR(I,J,L) = 0.0d0
+       ENDIF
+
+       !--------------------------------------------------------------------
+       ! Update tagged stratospheric ozone ("O3S") tracer in CESM
+       ! In the stratosphere, set O3S to O3 concentration
+       ! In the troposphere, destroy O3S at same *rate* as O3
+       !  -> Vloc(ind_LO3) is loss-terms-only of O3 but using [O3] concentrations.
+       !     remap it to [O3S] to create equivalent loss-rate for tagged strat O3.
+       !
+       ! At this point, C has already been copied back to State_Chm.
+       ! For clarity, operate directly on State_Chm array (fp). (hplin, 7/15/24)
+       !
+       ! Refer to the "O3S" tagged implementation by Emmons et al. (2012),
+       ! in mo_gas_phase_chemdr.F90 in CESM (search vmr(i,troplev(i)+1:pver,o3s_ndx))
+       !--------------------------------------------------------------------
+       IF ( .not. State_Met%InTroposphere(I,J,L) ) THEN
+          State_Chm%Species(id_O3S)%Conc(I,J,L) = State_Chm%Species(id_O3)%Conc(I,J,L)
+       ELSE
+          ! O3S is not a KPP species. Its loss rate is determined by LO3 only
+          State_Chm%Species(id_O3S)%Conc(I,J,L) = &
+             State_Chm%Species(id_O3S)%Conc(I,J,L) * exp((-1) * DT * Vloc(ind_LO3) / C_before_integrate(ind_O3))
        ENDIF
 #endif
 
@@ -2734,6 +2761,7 @@ CONTAINS
     id_SALAAL   = Ind_( 'SALAAL'       )
     id_SALC     = Ind_( 'SALC'         )
     id_SALCAL   = Ind_( 'SALCAL'       )
+    id_O3       = Ind_( 'O3'           )
 #ifdef TOMAS
     id_NK05     = Ind_( 'NK5'          )
     id_NK08     = Ind_( 'NK8'          )
@@ -2743,7 +2771,6 @@ CONTAINS
 
 #ifdef MODEL_GEOS
     ! ckeller
-    id_O3       = Ind_( 'O3'           )
     id_A3O2     = Ind_( 'A3O2'         )
     id_ATO2     = Ind_( 'ATO2'         )
     id_BRO2     = Ind_( 'BRO2'         )
@@ -2803,6 +2830,7 @@ CONTAINS
     id_SO4s     = Ind_('SO4s')
     id_NITs     = Ind_('NITs')
     id_HNO3     = Ind_('HNO3')
+    id_O3S      = Ind_('O3S')
 #endif
 
     ! Set flags to denote if each species is defined
