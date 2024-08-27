@@ -221,6 +221,9 @@ CONTAINS
 #if defined( MODEL_CESM )
     ! Sink rate for artificial UT/LS sink
     REAL(dp)               :: ScaleCESMLossRate
+
+    ! LO3 without using P/L diagnostic in order to isolate KPP changes
+    REAL(dp)               :: CESMLO3Rate
 #endif
 
     ! Grid box integration time diagnostic
@@ -1360,8 +1363,14 @@ CONTAINS
           State_Chm%Species(id_O3S)%Conc(I,J,L) = State_Chm%Species(id_O3)%Conc(I,J,L)
        ELSE
           ! O3S is not a KPP species. Its loss rate is determined by LO3 only
+          ! Compute LO3 from Aout... (hplin, 8/27/24)
+          CESMLO3Rate = Aout(1)+Aout(4)+Aout(8)+Aout(13)+Aout(14)+Aout(15)+Aout(16)+Aout(17)+Aout(111)+Aout(152)&
+                        +Aout(182)+Aout(186)+Aout(195)+Aout(242)+Aout(299)+Aout(316)+Aout(331)&
+                        +Aout(332)+Aout(336)+Aout(359)+Aout(369)+Aout(521)+Aout(524)+Aout(577)+Aout(602)+Aout(617)+Aout(624)&
+                        +Aout(627)+Aout(676)+Aout(677)+Aout(678)+Aout(738)+Aout(739)
+
           State_Chm%Species(id_O3S)%Conc(I,J,L) = &
-             State_Chm%Species(id_O3S)%Conc(I,J,L) * exp((-1) * DT * Vloc(ind_LOx) / C_before_integrate(ind_O3))
+             State_Chm%Species(id_O3S)%Conc(I,J,L) * exp((-1) * DT * CESMLO3Rate / C_before_integrate(ind_O3))
        ENDIF
 #endif
 
