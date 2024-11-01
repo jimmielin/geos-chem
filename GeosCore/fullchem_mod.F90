@@ -1376,25 +1376,25 @@ CONTAINS
           ! A(15) O3 + HO2 --> LOx + OH + 2 O2 (in CC)
           ! xxx not a o3 loss xxx A(16) O3 + NO2 --> NO3 + O2
           ! A(17) MO2 + O3 --> LOx + CH2O + HO2 + O2
-          ! A(111) PRPE + O3 --> 0.1 CO2 + LOx + 0.56 PCO + 0.1 CH4 + 0.12 CH3CHOO + 0.22 CH2OO + 0.5 C... etc.
-          ! xxx not a o3 loss xxx A(152) Br + O3 --> BrO + O2
-          ! A(186) O1D + O3 --> LOx + O + 1.5 O2 (in CC)
-          ! A(195) H + O3 --> LOx + OH + O2 (in CC)
-          ! xxx not a o3 loss xxx A(242) O3 + Cl --> ClO + O2
-          ! xxx not a o3 loss xxx A(299) I + O3 --> IO + O2
-          ! A(316) CH2OO + O3 --> LOx + CH2O
-          ! A(331) MTPA + O3 --> LOx + 0.14 PCO + 0.02 PH2O2 + 0.02 H2O2 + 0.53 MEK + 0.62 KO2 + 0.65 R... etc.
-          ! A(332) MTPO + O3 --> LOx + 0.14 PCO + 0.02 PH2O2 + 0.02 H2O2 + 0.53 MEK + 0.62 KO2 + 0.65 R... etc.
-          ! A(336) LIMO + O3 --> LOx + 0.14 PCO + 0.02 PH2O2 + 0.01 HCOOH + 0.02 H2O2 + 0.16 OTHRO2 + 0... etc.
-          ! A(359) MONITU + O3 --> LOx + HONIT
-          ! A(369) ISOP + O3 --> 0.407 CO2 + LOx + 0.407 PCO + 0.013 PH2O2 + 0.013 H2O2 + 0.58 CH2OO + ... etc (in CC)
-          ! A(521) MVK + O3 --> LOx + 0.28 PCO + 0.045 PH2O2 + 0.075 PYAC + 0.045 H2O2 + 0.545 MGLY + ... etc.
-          ! A(524) MACR + O3 --> LOx + 0.12 PCO + 0.88 MGLY + 0.88 CH2OO + 0.12 MCO3 + 0.12 CH2O + 0.12... etc.
-          ! A(577) C2H4 + O3 --> LOx + CH2OO + CH2O (in CC)
-          ! A(602) MCT + O3 --> LOx + AROMP4 + GLYC + HO2 + OH
-          ! A(617) BENZO + O3 --> LOx + BENZO2
-          ! A(624) AROMP4 + O3 --> LOx + 0.5 PCO + 0.5 HCOOH + 0.6 GLYX + 0.9 GLYC + 0.5 CO + 0.1 HO2 + 0.1 OH
-          ! A(627) AROMP5 + O3 --> LOx + 0.5 PCO + 0.2 HCOOH + 0.3 ACTA + 0.6 MGLY + 0.95 GLYC + 0.5 CO +... etc.
+          ! A(150) PRPE + O3 --> 0.1 CO2 + LOx + 0.56 PCO + 0.1 CH4 + 0.12 CH3CHOO + 0.22 CH2OO + 0.5 C... etc.
+          ! xxx not a o3 loss xxx A(xxx) Br + O3 --> BrO + O2
+          ! A(237) O1D + O3 --> LOx + O + 1.5 O2 (in CC)
+          ! A(246) H + O3 --> LOx + OH + O2 (in CC)
+          ! xxx not a o3 loss xxx A(xxx) O3 + Cl --> ClO + O2
+          ! xxx not a o3 loss xxx A(xxx) I + O3 --> IO + O2
+          ! A(367) CH2OO + O3 --> LOx + CH2O
+          ! A(383) MTPA + O3 --> LOx + 0.14 PCO + 0.02 PH2O2 + 0.02 H2O2 + 0.53 MEK + 0.62 KO2 + 0.65 R... etc.
+          ! A(381) MTPO + O3 --> LOx + 0.14 PCO + 0.02 PH2O2 + 0.02 H2O2 + 0.53 MEK + 0.62 KO2 + 0.65 R... etc.
+          ! A(379) LIMO + O3 --> LOx + 0.14 PCO + 0.02 PH2O2 + 0.01 HCOOH + 0.02 H2O2 + 0.16 OTHRO2 + 0... etc.
+          ! A(483) MONITU + O3 --> LOx + HONIT
+          ! A(493) ISOP + O3 --> 0.407 CO2 + LOx + 0.407 PCO + 0.013 PH2O2 + 0.013 H2O2 + 0.58 CH2OO + ... etc (in CC)
+          ! A(645) MVK + O3 --> LOx + 0.28 PCO + 0.045 PH2O2 + 0.075 PYAC + 0.045 H2O2 + 0.545 MGLY + ... etc.
+          ! A(648) MACR + O3 --> LOx + 0.12 PCO + 0.88 MGLY + 0.88 CH2OO + 0.12 MCO3 + 0.12 CH2O + 0.12... etc.
+          ! A(712) C2H4 + O3 --> LOx + CH2OO + CH2O (in CC)
+          ! A(746) MCT + O3 --> LOx + AROMP4 + GLYC + HO2 + OH
+          ! A(761) BENZO + O3 --> LOx + BENZO2
+          ! A(768) AROMP4 + O3 --> LOx + 0.5 PCO + 0.5 HCOOH + 0.6 GLYX + 0.9 GLYC + 0.5 CO + 0.1 HO2 + 0.1 OH
+          ! A(771) AROMP5 + O3 --> LOx + 0.5 PCO + 0.2 HCOOH + 0.3 ACTA + 0.6 MGLY + 0.95 GLYC + 0.5 CO +... etc.
           ! xxx not a o3 loss xxx A(676) O3 + HBr --> HOBr
           ! xxx not a o3 loss xxx A(677) O3 + BrSALA --> HOBr
           ! xxx not a o3 loss xxx A(678) BrSALC + O3 --> HOBr
@@ -1402,26 +1402,26 @@ CONTAINS
           ! xxx not a o3 loss xxx A(739) O3 --> O1D + O2
           !
           ! added:
-          ! A(175) O1D + H2O --> LOx + 2 OH
-          ! 2*A(182) O3 + O --> 2 LOx + 2 O2 (in CC)
-          ! 2*A(189) O + NO2 --> 2 LOx + NO + O2
-          ! 2*A(251) 2 ClO --> 2 LOx + Cl2 + O2
-          ! 2*A(252) 2 ClO --> 2 LOx + ClOO + Cl
-          ! 2*A(156) 2 BrO --> 2 LOx + 2 Br + O2
-          ! 2*A(157) 2 BrO --> 2 LOx + Br2 + O2
-          ! 2*A(200) BrO + O --> 2 LOx + Br + O2
-          ! 2*A(247) ClO + O --> 2 LOx + Cl + O2
-          ! 2*A(751) NO3 --> 2 LOx + NO + O2
+          ! A(226) O1D + H2O --> LOx + 2 OH
+          ! 2*A(233) O3 + O --> 2 LOx + 2 O2 (in CC)
+          ! 2*A(240) O + NO2 --> 2 LOx + NO + O2
+          ! 2*A(302) 2 ClO --> 2 LOx + Cl2 + O2
+          ! 2*A(303) 2 ClO --> 2 LOx + ClOO + Cl
+          ! 2*A(207) 2 BrO --> 2 LOx + 2 Br + O2
+          ! 2*A(208) 2 BrO --> 2 LOx + Br2 + O2
+          ! 2*A(251) BrO + O --> 2 LOx + Br + O2
+          ! 2*A(298) ClO + O --> 2 LOx + Cl + O2
+          ! 2*A(895) NO3 --> 2 LOx + NO + O2
           !
           ! final assembled list
           !          CESMLO3Rate = Aout(1)+Aout(4)+Aout(8)+Aout(14)+Aout(15)+Aout(17)+Aout(111) &
           !                        +Aout(186)+Aout(195)+Aout(316)+Aout(331)+Aout(332)+Aout(336)+Aout(359)&
           !                        +Aout(369)+Aout(521)+Aout(524)+Aout(577)+Aout(602)+Aout(617)+Aout(624)+Aout(627)&
           !                        +A(175)+2*A(182)+2*A(189)+2*A(247)+2*A(251)+2*A(252)+2*A(156)+2*A(157)+2*A(200)+2*A(751)&
-          CESMLO3Rate = Aout(1)+Aout(4)+Aout(8)+Aout(14)+Aout(15)+Aout(17)+Aout(111) &
-                       +Aout(186)+Aout(195)+Aout(316)+Aout(331)+Aout(332)+Aout(336)+Aout(359)&
-                       +Aout(369)+Aout(521)+Aout(524)+Aout(577)+Aout(602)+Aout(617)+Aout(624)+Aout(627)&
-                       +Aout(175)+2*Aout(182)+2*Aout(189)+2*Aout(247)+2*Aout(251)+2*Aout(252)+2*Aout(156)+2*Aout(157)+2*Aout(200)+2*Aout(751)&
+          CESMLO3Rate = Aout(1)+Aout(4)+Aout(8)+Aout(14)+Aout(15)+Aout(17)+Aout(150) &
+                       +Aout(237)+Aout(246)+Aout(367)+Aout(383)+Aout(381)+Aout(379)+Aout(483)&
+                       +Aout(493)+Aout(645)+Aout(648)+Aout(712)+Aout(746)+Aout(761)+Aout(768)+Aout(771)&
+                       +Aout(226)+2*Aout(233)+2*Aout(240)+2*Aout(302)+2*Aout(303)+2*Aout(207)+2*Aout(208)+2*Aout(251)+2*Aout(298)+2*Aout(895)&
 
           State_Chm%Species(id_O3S)%Conc(I,J,L) = &
              State_Chm%Species(id_O3S)%Conc(I,J,L) * exp((-1) * DT * CESMLO3Rate / C_before_integrate(ind_O3))
