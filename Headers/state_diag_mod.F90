@@ -25,7 +25,7 @@ MODULE State_Diag_Mod
   USE DiagList_Mod
   USE Dictionary_M,       ONLY : dictionary_t
   USE ErrCode_Mod
-  USE gckpp_Parameters,   ONLY : NREACT
+  USE gckpp_Parameters,   ONLY : NREACT, NVAR
   USE Precision_Mod
   USE Registry_Mod
   USE Species_Mod,        ONLY : Species
@@ -857,6 +857,10 @@ MODULE State_Diag_Mod
 
      REAL(f4),           POINTER :: KppcNONZERO(:,:,:)
      LOGICAL                     :: Archive_KppcNONZERO
+
+     REAL(f4),           POINTER :: KppActiveMask(:,:,:,:)
+     TYPE(DgnMap),       POINTER :: Map_KppActiveMask
+     LOGICAL                     :: Archive_KppActiveMask
 
      LOGICAL                     :: Archive_KppDiags
 
@@ -2299,6 +2303,10 @@ CONTAINS
 
     State_Diag%KppcNONZERO                         => NULL()
     State_Diag%Archive_KppcNONZERO                 = .FALSE.
+
+    State_Diag%KppActiveMask                       => NULL()
+    State_Diag%Map_KppActiveMask                   => NULL()
+    State_Diag%Archive_KppActiveMask               = .FALSE.
 
     State_Diag%KppTime                             => NULL()
     State_Diag%Archive_KppTime                     = .FALSE.
@@ -6319,6 +6327,32 @@ CONTAINS
        ENDIF
 
        !-------------------------------------------------------------------
+       ! AR only -- Packed per-species activity bitmask, 16 bits per word
+       ! (bit b of word w = KPP variable species (w-1)*16 + b + 1;
+       !  bit set = species was active i.e. not removed by auto-reduction)
+       !-------------------------------------------------------------------
+       diagID = 'KppActiveMask'
+       CALL Init_and_Register(                                               &
+            Input_Opt      = Input_Opt,                                      &
+            State_Chm      = State_Chm,                                      &
+            State_Diag     = State_Diag,                                     &
+            State_Grid     = State_Grid,                                     &
+            DiagList       = Diag_List,                                      &
+            TaggedDiagList = TaggedDiag_List,                                &
+            Ptr2Data       = State_Diag%KppActiveMask,                       &
+            archiveData    = State_Diag%Archive_KppActiveMask,               &
+            mapData        = State_Diag%Map_KppActiveMask,                   &
+            diagId         = diagId,                                         &
+            diagFlag       = 'M',                                            &
+            RC             = RC                                             )
+
+       IF ( RC /= GC_SUCCESS ) THEN
+          errMsg = TRIM( errMsg_ir ) // TRIM( diagId )
+          CALL GC_Error( errMsg, RC, thisLoc )
+          RETURN
+       ENDIF
+
+       !-------------------------------------------------------------------
        ! CPU time spent in grid box for KPP
        !-------------------------------------------------------------------
        diagID = 'KppTime'
@@ -6351,7 +6385,7 @@ CONTAINS
        ! being requested as diagnostic output when the corresponding
        ! array has not been allocated.
        !-------------------------------------------------------------------
-       DO N = 1, 17
+       DO N = 1, 18
           ! Select the diagnostic ID
           SELECT CASE( N )
              CASE( 1  )
@@ -6388,6 +6422,8 @@ CONTAINS
                 diagID = 'KppcNONZERO'
              CASE( 17 )
                 diagID = 'KppTime'
+             CASE( 18 )
+                diagID = 'KppActiveMask'
           END SELECT
 
           ! Exit if any of the above are in the diagnostic list
@@ -14205,6 +14241,12 @@ CONTAINS
     CALL Finalize( diagId   = 'KppNegatives0',                               &
                    Ptr2Data = State_Diag%KppNegatives0,                      &
                    RC       = RC                                            )
+    IF ( RC /= GC_SUCCESS ) RETURN
+
+    CALL Finalize( diagId   = 'KppActiveMask',                               &
+                   Ptr2Data = State_Diag%KppActiveMask,                      &
+                   mapData  = State_Diag%Map_KppActiveMask,                  &
+                   RC       = RC                                            )
 
     IF ( RC /= GC_SUCCESS ) RETURN
     CALL Finalize( diagId   = 'AirMassColumnFull',                            &
@@ -16259,6 +16301,13 @@ CONTAINS
        IF ( isUnits   ) Units = 'count'
        IF ( isRank    ) Rank  =  3
 
+    ELSE IF ( TRIM( Name_AllCaps ) == 'KPPACTIVEMASK' ) THEN
+       IF ( isDesc    ) Desc  = &
+            'Auto-reduce active species bitmask, 16 KPP species per word, LSB first, AR only'
+       IF ( isUnits   ) Units = '1'
+       IF ( isRank    ) Rank  =  3
+       IF ( isTagged  ) TagId = 'ARW'
+
     ELSE IF ( TRIM( Name_AllCaps ) == 'KPPTIME' ) THEN
        IF ( isDesc    ) Desc  = 'Time KPP spent in grid box'
        IF ( isUnits   ) Units = 's'
@@ -16902,6 +16951,8 @@ CONTAINS
           numTags = nRadOut
        CASE( 'RXN',     'R' )
           numTags = NREACT
+       CASE( 'ARW',     'M' )
+          numTags = ( NVAR + 15 ) / 16
        CASE( 'VAR',     'V' )
           numTags = State_Chm%nKppVar
        CASE( 'WET',     'W' )
@@ -17023,7 +17074,7 @@ CONTAINS
     !=======================================================================
     SELECT CASE( TRIM( tagID ) )
        CASE( 'ALL', 'ADV',   'DUSTBIN', 'TOMASBIN', 'PRD',                   &
-             'LOS', 'RRTMG', 'UVFLX',   'RXN'                               )
+             'LOS', 'RRTMG', 'UVFLX',   'RXN',      'ARW'                   )
           D = N
        CASE( 'AER'  )
           D = State_Chm%Map_Aero(N)
@@ -17095,6 +17146,11 @@ CONTAINS
        CASE( 'RXN' )
           WRITE ( Nstr, "(I4.4)" ) D
           tagName = 'EQ' // TRIM(Nstr)
+
+       ! KPP auto-reduce activity bitmask words
+       CASE( 'ARW' )
+          WRITE ( Nstr, "(I2.2)" ) D
+          tagName = 'W' // TRIM(Nstr)
 
        ! UVFlux requested output fluxes
        ! These are at the FAST-JX wavelength bins
@@ -18889,6 +18945,7 @@ CONTAINS
     LOGICAL                   :: isLoss
     LOGICAL                   :: isProd
     LOGICAL                   :: isRxnRate
+    LOGICAL                   :: isARMask
     LOGICAL                   :: isUvFlx
     LOGICAL                   :: isWildCard
     LOGICAL                   :: skipInd
@@ -18924,10 +18981,12 @@ CONTAINS
     isTomasBin = ( indFlag == 'T'                        )
     isDustBin  = ( indFlag == 'B'                        )
     isRxnRate  = ( indFlag == 'R'                        )
+    isARMask   = ( indFlag == 'M'                        )
     isUvFlx    = ( indFlag == 'U'                        )
     isLoss     = ( indFlag == 'X'                        )
     isProd     = ( indFlag == 'Y'                        )
-    skipInd    = ( isRxnRate .or. isUvFlx .or. isDustBin .or. isTomasBin )
+    skipInd    = ( isRxnRate .or. isUvFlx .or. isDustBin .or. isTomasBin    &
+                             .or. isARMask )
     spcName    = ''
     wcName     = ''
     errMsg     = ''
@@ -19087,6 +19146,13 @@ CONTAINS
              S      = LEN_TRIM( TagItem%name )
              rxnStr = TagItem%name(S-3:S)
              READ( rxnstr, '(I4.4) ' ) index
+             mapData%slot2id(TagItem%index) = index
+
+          ELSE IF ( isARMask ) THEN
+
+             ! KppActiveMask: the last 2 characters is the word index #
+             S      = LEN_TRIM( TagItem%name )
+             READ( TagItem%name(S-1:S), '(I2.2)' ) index
              mapData%slot2id(TagItem%index) = index
 
           ELSE IF ( isUvFlx ) THEN

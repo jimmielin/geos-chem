@@ -41,6 +41,7 @@ COLLECTIONS: 'Restart',
              #'JValues',
              ##'KppDiags',
              ##'KppARDiags',
+             ##'KppARMask',
              ##'ProdLoss',
              ##'RRTMG',
              ##'RxnRates',
@@ -408,6 +409,28 @@ COLLECTIONS: 'Restart',
   KppARDiags.fields:          'KppAutoReducerNVAR            ',
                               'KppAutoReduceThres            ',
                               'KppcNONZERO                   ',
+::
+#==============================================================================
+# %%%%% THE KppARMask COLLECTION %%%%%
+#
+# Packed per-species activity bitmask from the KPP auto-reduce solver.
+# Word W## stores KPP variable species (W-1)*16+1 .. (W-1)*16+16 (in the
+# gckpp_Monitor SPC_NAMES order), LSB first; bit set = species was active
+# (not removed) in the last integration of that cell.  All-zero words in
+# cells outside the chemistry grid (or before the first reduction) mean
+# "no data".
+#
+# The mode must remain 'instantaneous': bitmasks cannot be time-averaged.
+#
+# Available for full-chemistry simulations only if auto-reduce is enabled.
+#==============================================================================
+  KppARMask.template:         '%y4%m2%d2_%h2%n2z.nc4',
+  KppARMask.frequency:        00000000 030000
+  KppARMask.duration:         00000001 000000
+  KppARMask.mode:             'instantaneous'
+  KppARMask.fields:           'KppActiveMask_?ARW?           ',
+                              'KppAutoReducerNVAR            ',
+                              'KppAutoReduceThres            ',
 ::
 #==============================================================================
 # %%%%% THE ProdLoss COLLECTION %%%%%

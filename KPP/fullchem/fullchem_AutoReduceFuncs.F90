@@ -24,6 +24,7 @@ MODULE fullchem_AutoReduceFuncs
   PUBLIC :: fullchem_AR_KeepHalogensActive
   PUBLIC :: fullchem_AR_SetKeepActive
   PUBLIC :: fullchem_AR_UpdateKppDiags
+  PUBLIC :: fullchem_AR_ArchiveKppActiveMask
   PUBLIC :: fullchem_AR_SetIntegratorOptions
 !
 !EOP
@@ -187,6 +188,63 @@ CONTAINS
     ENDIF
 
   END SUBROUTINE fullchem_AR_UpdateKppDiags
+!EOC
+!------------------------------------------------------------------------------
+!                  GEOS-Chem Global Chemical Transport Model                  !
+!------------------------------------------------------------------------------
+!BOP
+!
+! !IROUTINE: fullchem_AR_ArchiveKppActiveMask
+!
+! !DESCRIPTION: Packs the rosenbrock_autoreduce activity mask (DO_SLV) into
+!  the KppActiveMask diagnostic, 16 species per 16-bit word, LSB first.
+!\\
+!\\
+! !INTERFACE:
+!
+  SUBROUTINE fullchem_AR_ArchiveKppActiveMask( I, J, L, State_Diag )
+!
+! !USES:
+!
+    USE gckpp_Parameters, ONLY : NVAR
+    USE gckpp_Global,     ONLY : DO_SLV
+    USE State_Diag_Mod,   ONLY : DgnState
+!
+! !INPUT PARAMETERS:
+!
+    INTEGER,        INTENT(IN)    :: I, J, L
+!
+! !INPUT/OUTPUT PARAMETERS:
+!
+    TYPE(DgnState), INTENT(INOUT) :: State_Diag
+!
+! !REMARKS:
+!  DO_SLV is THREADPRIVATE in gckpp_Global and holds the reduction decision
+!  of the most recent Integrate call made on this thread.  This routine must
+!  therefore be called from within the parallel loop, right after Integrate,
+!  and before any retry that re-integrates with auto-reduction disabled.
+!EOP
+!------------------------------------------------------------------------------
+!BOC
+!
+! !LOCAL VARIABLES:
+!
+    INTEGER :: S, B, N, W
+
+    ! Bit B (0-15) of word S is KPP variable species (slot2id(S)-1)*16+B+1
+    ! in SPC_NAMES order; bit set = species active (not removed).  Word
+    ! values are 0-65535, exactly representable in REAL(f4).
+    DO S = 1, State_Diag%Map_KppActiveMask%nSlots
+       W = 0
+       DO B = 0, 15
+          N = ( State_Diag%Map_KppActiveMask%slot2id(S) - 1 ) * 16 + B + 1
+          IF ( N > NVAR ) EXIT
+          IF ( DO_SLV(N) ) W = IBSET( W, B )
+       ENDDO
+       State_Diag%KppActiveMask(I,J,L,S) = W
+    ENDDO
+
+  END SUBROUTINE fullchem_AR_ArchiveKppActiveMask
 !EOC
 !------------------------------------------------------------------------------
 !                  GEOS-Chem Global Chemical Transport Model                  !

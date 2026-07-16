@@ -24,6 +24,7 @@ MODULE fullchem_AutoReduceFuncs
   PUBLIC :: fullchem_AR_KeepHalogensActive
   PUBLIC :: fullchem_AR_SetKeepActive
   PUBLIC :: fullchem_AR_UpdateKppDiags
+  PUBLIC :: fullchem_AR_ArchiveKppActiveMask
 !
 !EOP
 !------------------------------------------------------------------------------
@@ -59,6 +60,18 @@ CONTAINS
     TYPE(DgnState), INTENT(INOUT) :: State_Diag
     !
   END SUBROUTINE fullchem_AR_UpdateKppDiags
+
+  SUBROUTINE fullchem_AR_ArchiveKppActiveMask( I, J, L, State_Diag )
+    !
+    ! Packs the rosenbrock_autoreduce activity mask (DO_SLV) into the
+    ! KppActiveMask diagnostic
+    !
+    USE State_Diag_Mod, ONLY : DgnState
+    !
+    INTEGER,        INTENT(IN)    :: I, J, L
+    TYPE(DgnState), INTENT(INOUT) :: State_Diag
+    !
+  END SUBROUTINE fullchem_AR_ArchiveKppActiveMask
 
   SUBROUTINE fullchem_AR_SetIntegratorOptions( Input_Opt, State_Chm,         &
                                                State_Met, FirstChem,         &

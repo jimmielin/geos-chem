@@ -155,6 +155,7 @@ CONTAINS
     USE fullchem_AutoReduceFuncs, ONLY : fullchem_AR_KeepHalogensActive
     USE fullchem_AutoReduceFuncs, ONLY : fullchem_AR_SetKeepActive
     USE fullchem_AutoReduceFuncs, ONLY : fullchem_AR_UpdateKppDiags
+    USE fullchem_AutoReduceFuncs, ONLY : fullchem_AR_ArchiveKppActiveMask
     USE fullchem_AutoReduceFuncs, ONLY : fullchem_AR_SetIntegratorOptions
 #endif
     USE fullchem_HetStateFuncs,   ONLY : fullchem_SetStateHet
@@ -339,6 +340,7 @@ CONTAINS
     IF (State_Diag%Archive_RxnRate        ) State_Diag%RxnRate        = 0.0_f4
     IF (State_Diag%Archive_RxnConst       ) State_Diag%RxnConst       = 0.0_f4
     IF (State_Diag%Archive_SatDiagnRxnRate) State_Diag%SatDiagnRxnRate= 0.0_f4
+    IF (State_Diag%Archive_KppActiveMask  ) State_Diag%KppActiveMask  = 0.0_f4
     IF (State_Diag%Archive_KppDiags) THEN
        IF (State_Diag%Archive_KppIntCounts) State_Diag%KppIntCounts   = 0.0_f4
        IF (State_Diag%Archive_KppJacCounts) State_Diag%KppJacCounts   = 0.0_f4
@@ -1216,6 +1218,21 @@ CONTAINS
           ENDIF
 #endif
        ENDIF
+
+#ifdef KPP_INTEGRATOR_AUTOREDUCE
+       !=====================================================================
+       ! HISTORY: Archive the auto-reduce activity bitmask (DO_SLV packed
+       ! 16 species per word).  DO_SLV only holds a reduction decision when
+       ! auto-reduce was on for this call, i.e. not on the first chemistry
+       ! timestep (cf. ICNTRL(12) in fullchem_AR_SetIntegratorOptions).
+       ! This must happen before the retry below, which re-integrates with
+       ! auto-reduction disabled.
+       !=====================================================================
+       IF ( State_Diag%Archive_KppActiveMask .and.                           &
+            Input_Opt%Use_AutoReduce         .and. .not. FIRSTCHEM ) THEN
+          CALL fullchem_AR_ArchiveKppActiveMask( I, J, L, State_Diag )
+       ENDIF
+#endif
 
        !=====================================================================
        ! Try another time if it failed
