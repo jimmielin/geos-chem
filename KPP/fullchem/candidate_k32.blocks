@@ -1,0 +1,139 @@
+# Candidate KPP auto-reduce blocks (profile-derived, Phase 1)
+# order = removability (most-removable first, hub core last)
+# columns: order_idx  tag  activity_prob  n_species
+
+# block 0  unexercised  p_active=0.0000  n=16
+  LNRO2H LNRO2N NRO2 NAP CH3CCl3 CFC12 CFC113 CFC114
+  CFC115 H1301 H2402 H1211 HCFC123 HCFC141b HCFC142b EBZ
+
+# block 1  cluster  p_active=0.0000  n=1
+  CH2Br2
+
+# block 2  cluster  p_active=0.0000  n=1
+  CH3Br
+
+# block 3  cluster  p_active=0.0008  n=1
+  RNO3
+
+# block 4  cluster  p_active=0.0009  n=2
+  CHCl3 HCFC22
+
+# block 5  cluster  p_active=0.0011  n=1
+  IDNOO
+
+# block 6  cluster  p_active=0.0013  n=1
+  CCl4
+
+# block 7  cluster  p_active=0.0062  n=1
+  CHBr3
+
+# block 8  cluster  p_active=0.0067  n=3
+  TLFUONE TLFUO2 AROMCHO
+
+# block 9  cluster  p_active=0.0079  n=2
+  BUTN ZRO2
+
+# block 10  cluster  p_active=0.0099  n=1
+  BZCO3H
+
+# block 11  cluster  p_active=0.0103  n=2
+  CFC11 OCS
+
+# block 12  cluster  p_active=0.0341  n=1
+  ALK4N1
+
+# block 13  cluster  p_active=0.0432  n=2
+  PRPN PRN1
+
+# block 14  cluster  p_active=0.0458  n=2
+  ETHN NPRNO3
+
+# block 15  cluster  p_active=0.0506  n=4
+  CH2I2 CH2IBr CH2ICl CH3I
+
+# block 16  cluster  p_active=0.0513  n=11
+  LVOCOA LVOC HPALD1OO C4HVP1 ICNOO IDHNDOO1 IDHNDOO2 IHPNDOO
+  ICHOO IHPNBOO MACRNO2
+
+# block 17  cluster  p_active=0.0681  n=7
+  BUTDI FURA ACRO2 C4H6 BUTO2 STYR ACR
+
+# block 18  cluster  p_active=0.0847  n=1
+  N
+
+# block 19  cluster  p_active=0.0975  n=2
+  TMB BALD
+
+# block 20  cluster  p_active=0.0984  n=1
+  I2
+
+# block 21  cluster  p_active=0.1257  n=1
+  ClNO2
+
+# block 22  cluster  p_active=0.1417  n=1
+  INO
+
+# block 23  cluster  p_active=0.1423  n=2
+  PSO4AQ HMS
+
+# block 24  cluster  p_active=0.1492  n=1
+  R4N1
+
+# block 25  cluster  p_active=0.1506  n=2
+  ETNO3 MENO3
+
+# block 26  cluster  p_active=0.1542  n=1
+  HI
+
+# block 27  cluster  p_active=0.1881  n=9
+  PINONIC BZPAN AROMPN APAN LIMO2H MACR1OOH ACO3 BZCO3
+  AROMCO3
+
+# block 28  cluster  p_active=0.2607  n=72
+  LISOPOH LISOPNO3 LTRO2N LXRO2N PINO3H APINP BPINP IDC
+  BPINO HPALD2OO APINN BPINN HPALD4 INA IDCHP HPALD3
+  MCRDH BPINON LIMO LIMO3H C4HVP2 IDHDP IHN2 C96N
+  LIMNB MVKPC RIPA ISOPNOO2 MTPA RIPB PIN MCRENOL
+  IDHPE RIPD ISOPNOO1 RIPC HPETHNL LIMN MTPO IHPOO1
+  IHPOO2 PINAL PIP HPALD1 HPALD2 IHPOO3 LIMKET HC5A
+  MONITU PROPNN ICPDH ETHLN MYRCO IHN4 IHN1 LIMKO2
+  BPINO2 APINO2 ALK4N2 OLNN LIMO2 IEPOXBOO IEPOXAOO MCRHP
+  OLND PIO2 IDHNBOO ICN IHOO4 IHOO1 INO2B INO2D
+
+# block 29  cluster  p_active=0.3774  n=26
+  AONITA SOAGX SOAIE MONITA HMML IEPOXD MVKDH IEPOXA
+  IEPOXB HONIT BPINOOH LIMKB IHN3 INPD ICHE MCRHNB
+  INPB MVKHCB MCRHN LIMAL MONITS ITCN BPINOO2 IDN
+  MVKN ITHN
+
+# block 30  cluster  p_active=0.4009  n=2
+  N2O Cl2O2
+
+# block 31  cluster  p_active=0.5344  n=14
+  AERI ISALA ISALC MSA SO4s I2O4 I2O3 NITs
+  IBr DMS SALCAL SALAAL SALCCL BrSALC
+
+# block 32  cluster  p_active=1.0000  n=154
+  CO2 INDIOL LBRO2H LBRO2N BRO2 LTRO2H TRO2 LXRO2H
+  XRO2 PH2SO4 POx PCO LCO PSO4 LCH4 PH2O2
+  I2O2 PINPAN LIMPAN BrNO2 C2H2 NIT ALK6 HACTA
+  CH2Cl2 MPN TOLU HMHP IPRNO3 MAP OIO R4P
+  R7P RA3P RB3P XYLE ALK4P IONITA ICl ETO
+  HNO4 C2H4 ClOO MEKPN PHAN PYAC BENZP ETP
+  OClO PP PPN SO4 ETHP PAN C3H8 ALK4
+  BENZ Br2 RP EOH BrCl CSL C96O2H MP
+  R7N1 RCOOH R7O2 CH3Cl C2H6 MPAN ROH PHEN
+  R7N2 AROMP5 MCT BENZO MVKHC GCO3 N2O5 H
+  BrNO3 AROMP4 CH4 ETOO BENZO2 HNO2 CH3CHOO ATOOH
+  Cl2 MEKCO3 R4N2 IONO MCROHOO MVKOHOO PINO3 MACR1OO
+  PO2 AROMRO2 H2O2 HCOOH NPHEN GLYX LIMO3 ISOP
+  C96O2 MOH ACTA IO MVKHP PRPE MEK MGLY
+  ACET ETO2 RCHO ALK4O2 GLYC HAC MACR CH2OO
+  ATO2 MVK OTHRO2 HOBr ClNO3 R4O2 KO2 A3O2
+  RCO3 B3O2 MCO3 CH2O ALD2 HNO3 MO2 CO
+  HOI I IONO2 HOCl O1D HO2 ClO HCl
+  Cl Br O OH NO BrO SO2 BrSALA
+  HBr SALACL
+
+# block 33  core  p_active=1.0000  n=5
+  LOx NO2 H2O O3 NO3

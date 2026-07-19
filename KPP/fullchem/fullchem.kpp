@@ -1,4 +1,5 @@
 #MINVERSION   3.2.0                  { Need this version of KPP or later     }
+#BLOCKS       candidate_k32.blocks   { Profile-derived co-activity blocks    }
 #INTEGRATOR   rosenbrock_autoreduce  { Use Rosenbrock integration method     }
 #AUTOREDUCE   on                     { ...w/ autoreduce enabled but optional }
 #LANGUAGE     Fortran90              { Generate solver code in Fortran90 ... }
